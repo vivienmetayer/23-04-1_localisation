@@ -27,10 +27,15 @@ int main()
     }
 
     // draw corners
-    cv::aruco::drawDetectedCornersCharuco(image, corners, ids);
-    cv::namedWindow("corners", cv::WINDOW_NORMAL);
-    cv::imshow("corners", image);
-    cv::waitKey(0);
+//    cv::aruco::drawDetectedCornersCharuco(image, corners, ids);
+//    cv::namedWindow("corners", cv::WINDOW_NORMAL);
+//    cv::imshow("corners", image);
+//    cv::waitKey(0);
+
+    // calibrate
+    calibrate(cornersArray.data(), objectPointsArray.data(),
+              n, imageGray.cols, imageGray.rows,
+              R"(F:\Travail\Affaires\ARDPI\23-04-1 Systeme de localisation\data\calib_image.exr)");
 
     return 0;
 }

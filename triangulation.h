@@ -13,4 +13,6 @@ DLL_EXPORT int findBoardCorners(unsigned char *imagePtr, int width, int height, 
 DLL_EXPORT void calibrate(double* corners, double* corners3D, int numCorners,
                           int width, int height, const char* calib_filename);
 
+DLL_EXPORT void readCalibrationImage(const char* calib_image_path, float* map2D);
+
 #endif //INC_23_04_1_LOCALISATION_TRIANGULATION_H

@@ -1,35 +1,35 @@
 #include "triangulation.h"
 
-double distance_squared_2d(cv::Point2d p1, cv::Point2d p2)
+double distance_squared_2d(cv::Point2f p1, cv::Point2f p2)
 {
-    return (p1.x - p2.x) * (p1.x - p2.x) + (p1.y - p2.y) * (p1.y - p2.y);
+    return (p1.x - p2.x) * (p1.x - p2.x) + 3 * (p1.y - p2.y) * (p1.y - p2.y);
 }
 
-double distance_squared_3d(cv::Point3d p1, cv::Point3d p2)
+double distance_squared_3d(cv::Point3f p1, cv::Point3f p2)
 {
     return (p1.x - p2.x) * (p1.x - p2.x) + (p1.y - p2.y) * (p1.y - p2.y) + (p1.z - p2.z) * (p1.z - p2.z);
 }
 
-double scalarProduct(cv::Point2d p1, cv::Point2d p2)
+double scalarProduct(cv::Point2f p1, cv::Point2f p2)
 {
     return p1.x * p2.x + p1.y * p2.y;
 }
 
-double norm(cv::Point2d p)
+double norm(cv::Point2f p)
 {
     return std::sqrt(p.x * p.x + p.y * p.y);
 }
 
-bool Aligned(std::vector<cv::Point2d>& points)
+bool Aligned(std::vector<cv::Point3f>& points)
 {
-    cv::Point2d AB = points[1] - points[0];
-    cv::Point2d AC = points[2] - points[0];
+    cv::Point3f AB = points[1] - points[0];
+    cv::Point3f AC = points[2] - points[0];
     AB = (1 / norm(AB)) * AB;
     AC = (1 / norm(AC)) * AC;
-    return abs(AB.x * AC.x + AB.y * AC.y) > 0.95;
+    return abs(AB.x * AC.x + AB.y * AC.y) > 0.5;
 }
 
-std::vector<double> getBarycentricCoordinates(cv::Point2d p, std::vector<cv::Point2d>& points)
+std::vector<double> getBarycentricCoordinates(cv::Point2f p, std::vector<cv::Point2f>& points)
 {
     double xa = points[0].x;
     double xb = points[1].x;
@@ -49,13 +49,19 @@ std::vector<double> getBarycentricCoordinates(cv::Point2d p, std::vector<cv::Poi
     return { 1 - u - v, u, v };
 }
 
-cv::Point3d applyBarycentricCoords(std::vector<double>& coords, std::vector<cv::Point3d>& points)
+cv::Point3f applyBarycentricCoords(std::vector<double>& coords, std::vector<cv::Point3f>& points)
 {
-    cv::Point3d result{ 0,0,0 };
+//    cv::Point3f result{ 0,0,0 };
+//    double sum = coords[0] + coords[1] + coords[2];
+//    result += coords[0] / sum * (points[0]);
+//    result += coords[1] / sum * (points[1]);
+//    result += coords[2] / sum * (points[2]);
+//    return result;
+
+    cv::Point3f result = points[0];
     double sum = coords[0] + coords[1] + coords[2];
-    result += coords[0] / sum * (points[0]);
-    result += coords[1] / sum * (points[1]);
-    result += coords[2] / sum * (points[2]);
+    result += coords[1] / sum * (points[1] - points[0]);
+    result += coords[2] / sum * (points[2] - points[0]);
     return result;
 }
 
@@ -73,9 +79,9 @@ int findBoardCorners(unsigned char *imagePtr, int width, int height, int lineWid
 
     // find corners
     std::vector<int> markerIds;
-    std::vector <std::vector<cv::Point2d>> markerCorners;
+    std::vector <std::vector<cv::Point2f>> markerCorners;
     std::vector<int> charucoIds;
-    std::vector <cv::Point2d> charucoCorners;
+    std::vector <cv::Point2f> charucoCorners;
     cv::aruco::CharucoDetector charucoDetector(board);
     cv::aruco::CharucoParameters charucoParams;
     charucoParams.minMarkers = 1;
@@ -106,7 +112,10 @@ int findBoardCorners(unsigned char *imagePtr, int width, int height, int lineWid
     return (int) charucoCorners.size();
 }
 
-bool searchClosestPoints(cv::Point2d point, const std::vector<cv::Point2d>& corners, std::vector<int>& indices)
+bool searchClosestPoints(cv::Point2f point,
+                         const std::vector<cv::Point2f>& corners,
+                         const std::vector<cv::Point3f>& objectPoints,
+                         std::vector<int>& indices)
 {
     int size = (int)corners.size();
     if (size < 3) return false;
@@ -128,17 +137,17 @@ bool searchClosestPoints(cv::Point2d point, const std::vector<cv::Point2d>& corn
 
     // check further points if those 3 are aligned
     int i = 2;
-    std::vector<cv::Point2d> baryPoints(3);
-    baryPoints[0] = corners[indices[0]];
-    baryPoints[1] = corners[indices[1]];
-    baryPoints[2] = corners[indices[2]];
+    std::vector<cv::Point3f> baryPoints(3);
+    baryPoints[0] = objectPoints[indices[0]];
+    baryPoints[1] = objectPoints[indices[1]];
+    baryPoints[2] = objectPoints[indices[2]];
 
     while(Aligned(baryPoints)) {
         if (i++ == size) return false;
         indices.pop_back();
         indices.push_back(distances_indices[i].second);
         baryPoints.pop_back();
-        baryPoints.push_back(corners[indices[2]]);
+        baryPoints.push_back(objectPoints[indices[2]]);
     }
 
     return true;
@@ -146,30 +155,43 @@ bool searchClosestPoints(cv::Point2d point, const std::vector<cv::Point2d>& corn
 
 void calibrate(double* corners, double* corners3D, int numCorners, int width, int height, const char* calib_filename)
 {
-    std::vector<cv::Point2d> m_corners(numCorners);
+    std::vector<cv::Point2f> m_corners(numCorners);
     for (int i = 0; i < numCorners; ++i) {
-        m_corners[i] = cv::Point2d{ corners[2 * i], corners[2 * i + 1] };
+        m_corners[i] = cv::Point2f{ (float) corners[2 * i], (float) corners[2 * i + 1] };
     }
-    std::vector<cv::Point3d> m_corners3D(numCorners);
+    std::vector<cv::Point3f> m_corners3D(numCorners);
     for (int i = 0; i < numCorners; ++i) {
-        m_corners3D[i] = cv::Point3d{ corners3D[3 * i], corners3D[3 * i + 1], corners3D[3 * i + 2] };
+        m_corners3D[i] = cv::Point3f{ (float) corners3D[3 * i], (float) corners3D[3 * i + 1], (float) corners3D[3 * i + 2] };
     }
 
     cv::Mat calib_image(height, width, CV_32FC3);
     for (int i = 0; i < height; ++i) {
         for (int j = 0; j < width; ++j) {
-            cv::Point2d p{ (double)j, (double)i };
+            cv::Point2f p{ (float) j, (float) i };
             std::vector<int> indices;
-            searchClosestPoints(p, m_corners, indices);
+            searchClosestPoints(p, m_corners, m_corners3D, indices);
 
-            std::vector<cv::Point2d> points{ m_corners[indices[0]], m_corners[indices[1]], m_corners[indices[2]] };
+            std::vector<cv::Point2f> points{ m_corners[indices[0]], m_corners[indices[1]], m_corners[indices[2]] };
             std::vector<double> barycentricCoords = getBarycentricCoordinates(p, points);
 
-            std::vector<cv::Point3d> points3D{ m_corners3D[indices[0]], m_corners3D[indices[1]], m_corners3D[indices[2]] };
+            std::vector<cv::Point3f> points3D{ m_corners3D[indices[0]], m_corners3D[indices[1]], m_corners3D[indices[2]] };
             cv::Point3f result = applyBarycentricCoords(barycentricCoords, points3D);
 
             calib_image.at<cv::Vec3f>(i * width + j) = cv::Vec3f(result.x, result.y, result.z);
         }
     }
     cv::imwrite(calib_filename, calib_image);
+}
+
+void readCalibrationImage(const char* calib_image_path, float* map2D)
+{
+    cv::Mat image = cv::imread(calib_image_path, cv::IMREAD_UNCHANGED);
+
+    for (int i = 0; i < image.rows; ++i) {
+        for (int j = 0; j < image.cols; ++j) {
+            cv::Vec3f p3D = image.at<cv::Vec3f>(i, j);
+            map2D[(i * image.cols + j) * 2] = p3D[0];
+            map2D[(i * image.cols + j) * 2 + 1] = p3D[1];
+        }
+    }
 }
