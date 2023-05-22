@@ -280,7 +280,6 @@ void AcquireImageAndCreateHeatMapColoring(Arena::IDevice* pDevice)
 }
 
 int testHelios() {
-    test();
     std::cout << "Cpp_Acquisition_" << std::endl;
 
     try {
@@ -327,16 +326,19 @@ int testHelios() {
 }
 
 int main() {
-    testHelios();
+//    testHelios();
 
-//    Cam3d* cam = Cam3d::create();
-//
-//    cam->setA(1);
-//
-//    // sleep for 5 seconds
-//    std::this_thread::sleep_for(std::chrono::seconds(5));
-//
-//    Cam3d::remove();
+    // Create arena system
+    auto arenaSystemPtrInt = (uint64_t)CreateArenaSystem();
 
+    // Get devices
+    int numDevices = getNumDevices(reinterpret_cast<Arena::ISystem *>(arenaSystemPtrInt));
+    for (int i = 0; i < numDevices; ++i) {
+        char *deviceIPAddress = getDeviceIPAddress(reinterpret_cast<Arena::ISystem *>(arenaSystemPtrInt), i);
+        std::cout << "IP: " << deviceIPAddress << std::endl;
+    }
+
+    // Destroy arena system
+    DestroyArenaSystem(reinterpret_cast<Arena::ISystem *>(arenaSystemPtrInt));
     return 0;
 }

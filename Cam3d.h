@@ -6,12 +6,12 @@
 #include "ArenaApi.h"
 
 #ifdef CAM3DLIB
-#define DLL_EXPORT __declspec(dllexport)
+#define DLL_EXPORT_CAM3D __declspec(dllexport)
 #else
-#define DLL_EXPORT __declspec(dllimport)
+#define DLL_EXPORT_CAM3D __declspec(dllimport)
 #endif
 
-class DLL_EXPORT Cam3d {
+class DLL_EXPORT_CAM3D Cam3d {
 public:
     Cam3d();
     ~Cam3d();
