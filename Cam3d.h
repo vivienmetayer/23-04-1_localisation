@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <memory>
+#include "ArenaApi.h"
 
 #ifdef CAM3DLIB
 #define DLL_EXPORT __declspec(dllexport)
@@ -18,6 +19,10 @@ public:
     int getA() const { return _a; }
     void setA(int a) { _a = a; }
 
+    static void CreateArenaSystem();
+    static void DestroyArenaSystem();
+    static int getNumDevices();
+
     static std::vector<std::unique_ptr<Cam3d>>& getInstances() { return _instances; }
     static Cam3d* create();
     static void remove();
@@ -25,6 +30,7 @@ public:
 private:
     int _a;
     static std::vector<std::unique_ptr<Cam3d>> _instances;
+    static Arena::ISystem* _arenaSystem;
 };
 
 

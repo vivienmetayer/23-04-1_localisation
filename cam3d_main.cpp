@@ -296,6 +296,13 @@ int testHelios() {
             return 0;
         }
 
+        for (int i = 0; i < deviceInfos.size(); ++i)
+        {
+            std::cout << "IP: " << deviceInfos[i].IpAddressStr() << std::endl;
+            std::cout << "IP: " << deviceInfos[i].IpAddress() << std::endl;
+            std::cout << deviceInfos[i].ModelName() << std::endl;
+        }
+
         Arena::IDevice *pDevice = pSystem->CreateDevice(deviceInfos[0]);
 
         AcquireImageAndCreateHeatMapColoring(pDevice);
