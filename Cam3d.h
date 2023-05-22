@@ -13,24 +13,16 @@
 
 class DLL_EXPORT_CAM3D Cam3d {
 public:
-    Cam3d();
+    Cam3d(Arena::ISystem *system, int deviceIndex);
     ~Cam3d();
 
-    int getA() const { return _a; }
-    void setA(int a) { _a = a; }
-
-    static void CreateArenaSystem();
-    static void DestroyArenaSystem();
-    static int getNumDevices();
-
-    static std::vector<std::unique_ptr<Cam3d>>& getInstances() { return _instances; }
-    static Cam3d* create();
-    static void remove();
+    void setNode(std::string nodeName, std::string nodeValue);
+    void startStream();
+    void stopStream();
 
 private:
-    int _a;
-    static std::vector<std::unique_ptr<Cam3d>> _instances;
-    static Arena::ISystem* _arenaSystem;
+    Arena::ISystem *_system;
+    Arena::IDevice *_device;
 };
 
 

@@ -331,12 +331,46 @@ int main() {
     // Create arena system
     auto arenaSystemPtrInt = (uint64_t)CreateArenaSystem();
 
-    // Get devices
+    // Get devices and find helios index
     int numDevices = getNumDevices(reinterpret_cast<Arena::ISystem *>(arenaSystemPtrInt));
+    int deviceIndex = -1;
     for (int i = 0; i < numDevices; ++i) {
-        char *deviceIPAddress = getDeviceIPAddress(reinterpret_cast<Arena::ISystem *>(arenaSystemPtrInt), i);
+        std::string deviceIPAddress = getDeviceIPAddress(reinterpret_cast<Arena::ISystem *>(arenaSystemPtrInt), i);
         std::cout << "IP: " << deviceIPAddress << std::endl;
+        std::string modelName = getDeviceModelName(reinterpret_cast<Arena::ISystem *>(arenaSystemPtrInt), i);
+        std::cout << modelName << std::endl;
+
+        if (modelName.starts_with("HLT")) {
+            std::cout << "Found Helios" << std::endl;
+            deviceIndex = i;
+            break;
+        }
     }
+
+    if (deviceIndex == -1) {
+        std::cout << "No Helios found" << std::endl;
+        return -1;
+    }
+
+    // Create device
+    Cam3d* cam3d = createCam3d(reinterpret_cast<Arena::ISystem *>(arenaSystemPtrInt), deviceIndex);
+
+    // set nodes
+    cam3d->setNode("PixelFormat", "Coord3D_ABCY16");
+    cam3d->setNode("Scan3dOperatingMode", "Distance3000mmSingleFreq");
+    cam3d->setNode("Scan3dCoordinateSelector", "CoordinateC");
+
+    // start stream
+    cam3d->startStream();
+
+    // todo get data
+    // todo send data
+
+    // stop stream
+    cam3d->stopStream();
+
+    // delete device
+    destroyCam3d(cam3d);
 
     // Destroy arena system
     DestroyArenaSystem(reinterpret_cast<Arena::ISystem *>(arenaSystemPtrInt));
