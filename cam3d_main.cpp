@@ -98,13 +98,13 @@ void AcquireImageAndCreateHeatMapColoring(Arena::IDevice* pDevice)
     size_t dstBpp = Arena::GetBitsPerPixel(PIXEL_FORMAT);
     size_t dstPixelSize = dstBpp / 8;				  // divide by the number of bits in a byte
     size_t dstDataSize = width * height * dstBpp / 8; // divide by the number of bits in a byte
-    uint8_t* pOutput = new uint8_t[dstDataSize];
+    auto* pOutput = new uint8_t[dstDataSize];
     memset(pOutput, 0, dstDataSize);
 
     // Prepare coloring buffer for ply image
     //    Saving ply with color takes RGB coloring compared to the BGR coloring
     //    the jpg image uses, therefore we need a separate buffer for this data.
-    uint8_t* pColoring = new uint8_t[dstDataSize];
+    auto* pColoring = new uint8_t[dstDataSize];
     memset(pColoring, 0, dstDataSize);
     uint8_t* pColor = pColoring;
 
@@ -157,9 +157,9 @@ void AcquireImageAndCreateHeatMapColoring(Arena::IDevice* pDevice)
         //    1500mm (in this case 3000mm for Helios2).
         z = int16_t(double(z) * scale);
 
-        double coordinateColorBlue = 0.0;
-        double coordinateColorGreen = 0.0;
-        double coordinateColorRed = 0.0;
+        double coordinateColorBlue;
+        double coordinateColorGreen;
+        double coordinateColorRed;
 
         // colors between red and yellow
         if ((z >= redColorBorder) && (z <= yellowColorBorder))
@@ -233,7 +233,7 @@ void AcquireImageAndCreateHeatMapColoring(Arena::IDevice* pDevice)
     std::cout << pCreate->GetWidth() << "\n";
     std::cout << pCreate->GetSizeFilled() << "\n";
     std::cout << pCreate->GetPixelFormat() << "\n";
-    cv::Mat image(pImage->GetHeight(), pImage->GetWidth(), CV_8UC3, (void*)pOutput);
+    cv::Mat image((int)pImage->GetHeight(), (int)pImage->GetWidth(), CV_8UC3, (void*)pOutput);
     cv::imwrite("test.jpg", image);
 //    Save::ImageParams jpgParams(width, height, dstBpp);
 //    Save::ImageWriter jpgWriter(jpgParams, JPG_FILE_NAME);
@@ -268,7 +268,7 @@ void AcquireImageAndCreateHeatMapColoring(Arena::IDevice* pDevice)
 
     // clean up
     Arena::ImageFactory::Destroy(pCreate);
-    pOutput = NULL;
+    pOutput = nullptr;
     delete[] pOutput;
     pDevice->RequeueBuffer(pImage);
     pDevice->StopStream();
@@ -295,11 +295,11 @@ int testHelios() {
             return 0;
         }
 
-        for (int i = 0; i < deviceInfos.size(); ++i)
+        for (auto & deviceInfo : deviceInfos)
         {
-            std::cout << "IP: " << deviceInfos[i].IpAddressStr() << std::endl;
-            std::cout << "IP: " << deviceInfos[i].IpAddress() << std::endl;
-            std::cout << deviceInfos[i].ModelName() << std::endl;
+            std::cout << "IP: " << deviceInfo.IpAddressStr() << std::endl;
+            std::cout << "IP: " << deviceInfo.IpAddress() << std::endl;
+            std::cout << deviceInfo.ModelName() << std::endl;
         }
 
         Arena::IDevice *pDevice = pSystem->CreateDevice(deviceInfos[0]);
@@ -325,9 +325,7 @@ int testHelios() {
     return 0;
 }
 
-int main() {
-//    testHelios();
-
+int testHeliosDLLInterface() {
     // Create arena system
     auto arenaSystemPtrInt = (uint64_t)CreateArenaSystem();
 
@@ -355,24 +353,30 @@ int main() {
     // Create device
     Cam3d* cam3d = createCam3d(reinterpret_cast<Arena::ISystem *>(arenaSystemPtrInt), deviceIndex);
 
-    // set nodes
-    cam3d->setNode("PixelFormat", "Coord3D_ABCY16");
-    cam3d->setNode("Scan3dOperatingMode", "Distance3000mmSingleFreq");
-    cam3d->setNode("Scan3dCoordinateSelector", "CoordinateC");
+    // set nodes)
+    setNode(cam3d, "PixelFormat", "Coord3D_ABCY16");
+    setNode(cam3d, "Scan3dOperatingMode", "Distance3000mmSingleFreq");
+    setNode(cam3d, "Scan3dCoordinateSelector", "CoordinateC");
 
     // start stream
-    cam3d->startStream();
+    startStream(cam3d);
 
-    // todo get data
-    // todo send data
+    // get data
+    std::vector<double> pointsData(3 * 640 * 480);
+    getData(cam3d, pointsData.data());
 
     // stop stream
-    cam3d->stopStream();
+    stopStream(cam3d);
 
     // delete device
     destroyCam3d(cam3d);
 
     // Destroy arena system
     DestroyArenaSystem(reinterpret_cast<Arena::ISystem *>(arenaSystemPtrInt));
+    return 0;
+}
+
+int main() {
+    testHeliosDLLInterface();
     return 0;
 }

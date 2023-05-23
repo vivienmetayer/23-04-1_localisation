@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <memory>
+#include <opencv2/opencv.hpp>
 #include "ArenaApi.h"
 
 #ifdef CAM3DLIB
@@ -16,9 +17,11 @@ public:
     Cam3d(Arena::ISystem *system, int deviceIndex);
     ~Cam3d();
 
+    void getNode(std::string nodeName, std::string &nodeValue);
     void setNode(std::string nodeName, std::string nodeValue);
     void startStream();
     void stopStream();
+    void getData(std::vector<std::vector<cv::Point3d>> &points, uint64_t timeout = 1000);
 
 private:
     Arena::ISystem *_system;
