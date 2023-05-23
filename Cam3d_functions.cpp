@@ -53,15 +53,13 @@ void stopStream(Cam3d *cam3d) {
     cam3d->stopStream();
 }
 
-void getData(Cam3d *cam3d, double* points, uint64_t timeout) {
-    std::vector<std::vector<cv::Point3d>> cvPoints;
-    cam3d->getData(cvPoints, timeout);
-    for (int i = 0; i < cvPoints.size(); i++) {
-        size_t lineSize = cvPoints[i].size() * 3;
-        for (int j = 0; j < cvPoints[i].size(); j++) {
-            points[j * 3 + i * lineSize    ] = cvPoints[i][j].x;
-            points[j * 3 + i * lineSize + 1] = cvPoints[i][j].y;
-            points[j * 3 + i * lineSize + 2] = cvPoints[i][j].z;
-        }
+int getData(Cam3d *cam3d, double* points, uint64_t timeout) {
+    std::vector<cv::Point3d> cvPoints;
+    int numPoints = cam3d->getData(cvPoints, timeout);
+    for (int i = 0; i < numPoints; i++) {
+        points[i * 3] = cvPoints[i].x;
+        points[i * 3 + 1] = cvPoints[i].y;
+        points[i * 3 + 2] = cvPoints[i].z;
     }
+    return numPoints;
 }

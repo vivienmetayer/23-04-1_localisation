@@ -20,7 +20,7 @@ DLL_EXPORT_C void destroyCam3d(Cam3d *cam3d);
 DLL_EXPORT void setNode(Cam3d *cam3d, std::string nodeName, std::string nodeValue);
 DLL_EXPORT_C void startStream(Cam3d *cam3d);
 DLL_EXPORT_C void stopStream(Cam3d *cam3d);
-DLL_EXPORT_C void getData(Cam3d *cam3d, double* points, uint64_t timeout = 1000);
+DLL_EXPORT_C int getData(Cam3d *cam3d, double* points, uint64_t timeout = 1000);
 
 
 #endif //INC_23_04_1_LOCALISATION_CAM3D_FUNCTIONS_H

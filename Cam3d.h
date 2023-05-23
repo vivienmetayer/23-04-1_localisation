@@ -21,7 +21,7 @@ public:
     void setNode(std::string nodeName, std::string nodeValue);
     void startStream();
     void stopStream();
-    void getData(std::vector<std::vector<cv::Point3d>> &points, uint64_t timeout = 1000);
+    int getData(std::vector<cv::Point3d> &points, uint64_t timeout = 1000);
 
 private:
     Arena::ISystem *_system;

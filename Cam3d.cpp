@@ -35,7 +35,7 @@ void Cam3d::stopStream() {
     _device->StopStream();
 }
 
-void Cam3d::getData(std::vector<std::vector<cv::Point3d>> &points, uint64_t timeout) {
+int Cam3d::getData(std::vector<cv::Point3d> &points, uint64_t timeout) {
     Arena::IImage* pImage = _device->GetImage(timeout);
 
     size_t width = pImage->GetWidth();
@@ -49,21 +49,25 @@ void Cam3d::getData(std::vector<std::vector<cv::Point3d>> &points, uint64_t time
     const uint8_t* dataPtr = pImage->GetData();
     const uint8_t* pIn = dataPtr;
 
-    points.resize(height);
-    for (size_t i = 0; i < height; i++) {
-        points[i].resize(width);
-        for (size_t j = 0; j < width; ++j) {
-            int16_t x = *reinterpret_cast<const int16_t*>(pIn);
-            x = int16_t(double(x) * scale);
-            int16_t y = *reinterpret_cast<const int16_t*>((pIn + 2));
-            y = int16_t(double(y) * scale);
-            int16_t z = *reinterpret_cast<const int16_t*>((pIn + 4));
-            z = int16_t(double(z) * scale);
+    points.resize(height * width);
+    int numPoints = 0;
+    for (size_t i = 0; i < height * width; i++) {
+        uint16_t x = *reinterpret_cast<const uint16_t*>(pIn);
+//            x = int16_t(double(x) * scale);
+        uint16_t y = *reinterpret_cast<const uint16_t*>((pIn + 2));
+//            y = int16_t(double(y) * scale);
+        uint16_t z = *reinterpret_cast<const uint16_t*>((pIn + 4));
+//            z = int16_t(double(z) * scale);
 
-            points[i][j] = cv::Point3d(x, y, z);
-            pIn += srcPixelSize;
-        }
+        if (z == -1)
+            continue;
+
+        points[numPoints] = cv::Point3d(x, y, z) * scale;
+        pIn += srcPixelSize;
+        numPoints++;
     }
+    points.resize(numPoints);
+    return numPoints;
 }
 
 

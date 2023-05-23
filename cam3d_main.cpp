@@ -1,4 +1,5 @@
 #include <iostream>
+#include <fstream>
 
 #include "Cam3d_functions.h"
 #include "Cam3d.h"
@@ -364,6 +365,13 @@ int testHeliosDLLInterface() {
     // get data
     std::vector<double> pointsData(3 * 640 * 480);
     getData(cam3d, pointsData.data());
+
+    // save data as xyz file
+    std::ofstream myfile;
+    myfile.open ("points.xyz");
+    for (int i = 0; i < pointsData.size(); i += 3) {
+        myfile << pointsData[i] << " " << pointsData[i+1] << " " << pointsData[i+2] << "\n";
+    }
 
     // stop stream
     stopStream(cam3d);
