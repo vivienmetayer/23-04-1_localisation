@@ -12,17 +12,44 @@ Cam3d::Cam3d(Arena::ISystem *system, int deviceIndex) {
     _device = _system->CreateDevice(deviceInfos[deviceIndex]);
 }
 
+Cam3d::Cam3d(Arena::ISystem *system, int deviceIndex,
+             uint64_t forcedIp, uint64_t subnetMask, uint64_t gateway) {
+    _system = system;
+    Arena::InterfaceInfo interfaceInfo;
+    _system->UpdateDevices(100);
+    std::vector<Arena::DeviceInfo> deviceInfos = _system->GetDevices();
+
+    uint64_t macAddress = deviceInfos[deviceIndex].MacAddress();
+
+    _system->ForceIp(macAddress, forcedIp, subnetMask, gateway);
+
+    _system->UpdateDevices(100);
+    deviceInfos = _system->GetDevices();
+
+    //
+    auto it = std::find_if(
+            deviceInfos.begin(),
+            deviceInfos.end(),
+            [&macAddress](Arena::DeviceInfo deviceInfo) {
+                return deviceInfo.MacAddress() == macAddress;
+            });
+    _device = _system->CreateDevice(*it);
+
+    Arena::SetNodeValue<bool>(_device->GetTLStreamNodeMap(), "StreamAutoNegotiatePacketSize", true);
+    Arena::SetNodeValue<bool>(_device->GetTLStreamNodeMap(), "StreamPacketResendEnable", true);
+}
+
 Cam3d::~Cam3d() {
     _system->DestroyDevice(_device);
 }
 
-void Cam3d::getNode(std::string nodeName, std::string &nodeValue) {
+void Cam3d::getNode(const std::string& nodeName, std::string &nodeValue) {
     GenApi::INodeMap* pNodeMap = _device->GetNodeMap();
     GenICam::gcstring value = Arena::GetNodeValue<GenICam::gcstring>(pNodeMap, nodeName.c_str());
     nodeValue = value.c_str();
 }
 
-void Cam3d::setNode(std::string nodeName, std::string nodeValue) {
+void Cam3d::setNode(const std::string& nodeName, const std::string& nodeValue) {
     GenApi::INodeMap* pNodeMap = _device->GetNodeMap();
     Arena::SetNodeValue<GenICam::gcstring>(pNodeMap, nodeName.c_str(), nodeValue.c_str());
 }
@@ -52,16 +79,19 @@ int Cam3d::getData(std::vector<cv::Point3d> &points, uint64_t timeout) {
     points.resize(height * width);
     int numPoints = 0;
     for (size_t i = 0; i < height * width; i++) {
-        uint16_t x = *reinterpret_cast<const uint16_t*>(pIn);
+        int16_t ix = *reinterpret_cast<const int16_t*>(pIn);
 //            x = int16_t(double(x) * scale);
-        uint16_t y = *reinterpret_cast<const uint16_t*>((pIn + 2));
+        int16_t iy = *reinterpret_cast<const int16_t*>((pIn + 2));
 //            y = int16_t(double(y) * scale);
-        uint16_t z = *reinterpret_cast<const uint16_t*>((pIn + 4));
+        int16_t iz = *reinterpret_cast<const int16_t*>((pIn + 4));
 //            z = int16_t(double(z) * scale);
 
-        if (z == -1)
+        if (iz == -1)
             continue;
 
+        uint16_t x = reinterpret_cast<const uint16_t&>(ix);
+        uint16_t y = reinterpret_cast<const uint16_t&>(iy);
+        uint16_t z = reinterpret_cast<const uint16_t&>(iz);
         points[numPoints] = cv::Point3d(x, y, z) * scale;
         pIn += srcPixelSize;
         numPoints++;
@@ -69,6 +99,8 @@ int Cam3d::getData(std::vector<cv::Point3d> &points, uint64_t timeout) {
     points.resize(numPoints);
     return numPoints;
 }
+
+
 
 
 

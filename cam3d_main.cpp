@@ -352,7 +352,11 @@ int testHeliosDLLInterface() {
     }
 
     // Create device
-    Cam3d* cam3d = createCam3d(reinterpret_cast<Arena::ISystem *>(arenaSystemPtrInt), deviceIndex);
+    uint64_t ipAddress = 169 << 24 | 254 << 16 | 0u << 8 | 41u;
+    uint64_t subnetMask = 0xFFFF0000;
+    uint64_t defaultGateway = 0;
+    Cam3d *cam3d = createCam3dForcedIP(reinterpret_cast<Arena::ISystem *>(arenaSystemPtrInt),
+                                       deviceIndex, ipAddress, subnetMask, defaultGateway);
 
     // set nodes)
     setNode(cam3d, "PixelFormat", "Coord3D_ABCY16");
@@ -364,7 +368,13 @@ int testHeliosDLLInterface() {
 
     // get data
     std::vector<double> pointsData(3 * 640 * 480);
-    getData(cam3d, pointsData.data());
+    int numPoints;
+    for (int i = 0; i < 5; ++i) {
+        numPoints = getData(cam3d, pointsData.data());
+        std::cout << "Points: " << numPoints << std::endl;
+    }
+    pointsData.resize(numPoints * 3);
+
 
     // save data as xyz file
     std::ofstream myfile;
@@ -385,6 +395,20 @@ int testHeliosDLLInterface() {
 }
 
 int main() {
-    testHeliosDLLInterface();
+    try {
+        testHeliosDLLInterface();
+    }
+    catch (GenICam::GenericException &ge) {
+        std::cout << "\nGenICam exception thrown: " << ge.what() << "\n";
+        return -1;
+    }
+    catch (std::exception &ex) {
+        std::cout << "\nStandard exception thrown: " << ex.what() << "\n";
+        return -1;
+    }
+    catch (...) {
+        std::cout << "\nUnexpected exception thrown\n";
+        return -1;
+    }
     return 0;
 }

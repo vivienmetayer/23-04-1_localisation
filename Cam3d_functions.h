@@ -16,6 +16,8 @@ DLL_EXPORT std::string getDeviceModelName(Arena::ISystem *system, int deviceInde
 
 // Cam3d
 DLL_EXPORT_C Cam3d* createCam3d(Arena::ISystem *system, int deviceIndex);
+DLL_EXPORT_C Cam3d* createCam3dForcedIP(Arena::ISystem *system, int deviceIndex,
+                                        uint64_t forcedIp, uint64_t subnetMask, uint64_t gateway);
 DLL_EXPORT_C void destroyCam3d(Cam3d *cam3d);
 DLL_EXPORT void setNode(Cam3d *cam3d, std::string nodeName, std::string nodeValue);
 DLL_EXPORT_C void startStream(Cam3d *cam3d);

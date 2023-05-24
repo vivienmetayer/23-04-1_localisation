@@ -37,6 +37,11 @@ Cam3d* createCam3d(Arena::ISystem *system, int deviceIndex) {
     return new Cam3d(system, deviceIndex);
 }
 
+Cam3d* createCam3dForcedIP(Arena::ISystem *system, int deviceIndex,
+                           uint64_t forcedIp, uint64_t subnetMask, uint64_t gateway) {
+    return new Cam3d(system, deviceIndex, forcedIp, subnetMask, gateway);
+}
+
 void destroyCam3d(Cam3d *cam3d) {
     delete cam3d;
 }

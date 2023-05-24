@@ -15,10 +15,12 @@
 class DLL_EXPORT_CAM3D Cam3d {
 public:
     Cam3d(Arena::ISystem *system, int deviceIndex);
+    Cam3d(Arena::ISystem *system, int deviceIndex,
+          uint64_t forcedIp, uint64_t subnetMask, uint64_t gateway);
     ~Cam3d();
 
-    void getNode(std::string nodeName, std::string &nodeValue);
-    void setNode(std::string nodeName, std::string nodeValue);
+    void getNode(const std::string& nodeName, std::string &nodeValue);
+    void setNode(const std::string& nodeName, const std::string& nodeValue);
     void startStream();
     void stopStream();
     int getData(std::vector<cv::Point3d> &points, uint64_t timeout = 1000);
