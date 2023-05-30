@@ -334,12 +334,16 @@ int testHeliosDLLInterface() {
     int numDevices = getNumDevices(reinterpret_cast<Arena::ISystem *>(arenaSystemPtrInt));
     int deviceIndex = -1;
     for (int i = 0; i < numDevices; ++i) {
-        std::string deviceIPAddress = getDeviceIPAddress(reinterpret_cast<Arena::ISystem *>(arenaSystemPtrInt), i);
+        char ipAddress[128];
+        char modelName[128];
+        getDeviceIPAddress(reinterpret_cast<Arena::ISystem *>(arenaSystemPtrInt), i, ipAddress);
+        std::string deviceIPAddress = ipAddress;
         std::cout << "IP: " << deviceIPAddress << std::endl;
-        std::string modelName = getDeviceModelName(reinterpret_cast<Arena::ISystem *>(arenaSystemPtrInt), i);
-        std::cout << modelName << std::endl;
+        getDeviceModelName(reinterpret_cast<Arena::ISystem *>(arenaSystemPtrInt), i, modelName);
+        std::string modelNameStr = modelName;
+        std::cout << modelNameStr << std::endl;
 
-        if (modelName.starts_with("HLT")) {
+        if (modelNameStr.starts_with("HLT")) {
             std::cout << "Found Helios" << std::endl;
             deviceIndex = i;
             break;
@@ -355,13 +359,17 @@ int testHeliosDLLInterface() {
     uint64_t ipAddress = 169 << 24 | 254 << 16 | 0u << 8 | 41u;
     uint64_t subnetMask = 0xFFFF0000;
     uint64_t defaultGateway = 0;
-    Cam3d *cam3d = createCam3dForcedIP(reinterpret_cast<Arena::ISystem *>(arenaSystemPtrInt),
-                                       deviceIndex, ipAddress, subnetMask, defaultGateway);
+    Cam3d *cam3d = reinterpret_cast<Cam3d*>(createCam(reinterpret_cast<Arena::ISystem *>(arenaSystemPtrInt), deviceIndex));
+//    Cam3d *cam3d = createCam3dForcedIP(reinterpret_cast<Arena::ISystem *>(arenaSystemPtrInt),
+//                                       deviceIndex, ipAddress, subnetMask, defaultGateway);
 
     // set nodes)
-    setNode(cam3d, "PixelFormat", "Coord3D_ABCY16");
-    setNode(cam3d, "Scan3dOperatingMode", "Distance3000mmSingleFreq");
-    setNode(cam3d, "Scan3dCoordinateSelector", "CoordinateC");
+    setNodeStr(cam3d, "PixelFormat", "Coord3D_ABCY16");
+    setNodeStr(cam3d, "Scan3dOperatingMode", "Distance5000mmMultiFreq");
+//    setNode(cam3d, "Scan3dOperatingMode", "Distance3000mmSingleFreq");
+    setNodeInt(cam3d, "Scan3dConfidenceThresholdMin", (int64_t)500);
+    setNodeBool(cam3d, "Scan3dConfidenceThresholdEnable", false);
+    setNodeStr(cam3d, "Scan3dCoordinateSelector", "CoordinateC");
 
     // start stream
     startStream(cam3d);
@@ -387,7 +395,81 @@ int testHeliosDLLInterface() {
     stopStream(cam3d);
 
     // delete device
-    destroyCam3d(cam3d);
+    destroyCam(cam3d);
+
+    // Destroy arena system
+    DestroyArenaSystem(reinterpret_cast<Arena::ISystem *>(arenaSystemPtrInt));
+    return 0;
+}
+
+int testTritonDLLInterface() {
+    // Create arena system
+    auto arenaSystemPtrInt = (uint64_t)CreateArenaSystem();
+
+    // Get devices and find helios index
+    int numDevices = getNumDevices(reinterpret_cast<Arena::ISystem *>(arenaSystemPtrInt));
+    int deviceIndex = -1;
+    for (int i = 0; i < numDevices; ++i) {
+        char ipAddress[128];
+        char modelName[128];
+        getDeviceIPAddress(reinterpret_cast<Arena::ISystem *>(arenaSystemPtrInt), i, ipAddress);
+        std::string deviceIPAddress = ipAddress;
+        std::cout << "IP: " << deviceIPAddress << std::endl;
+        getDeviceModelName(reinterpret_cast<Arena::ISystem *>(arenaSystemPtrInt), i, modelName);
+        std::string modelNameStr = modelName;
+        std::cout << modelNameStr << std::endl;
+
+        if (modelNameStr.starts_with("TRI")) {
+            std::cout << "Found Triton" << std::endl;
+            deviceIndex = i;
+            break;
+        }
+    }
+
+    if (deviceIndex == -1) {
+        std::cout << "No Triton found" << std::endl;
+        return -1;
+    }
+
+    // Create device
+    uint64_t ipAddress = 169 << 24 | 254 << 16 | 0u << 8 | 41u;
+    uint64_t subnetMask = 0xFFFF0000;
+    uint64_t defaultGateway = 0;
+    Cam2d *cam2d = reinterpret_cast<Cam2d*>(createCam(reinterpret_cast<Arena::ISystem *>(arenaSystemPtrInt), deviceIndex));
+//    Cam3d *cam3d = createCam3dForcedIP(reinterpret_cast<Arena::ISystem *>(arenaSystemPtrInt),
+//                                       deviceIndex, ipAddress, subnetMask, defaultGateway);
+
+    // set nodes)
+//    setNodeStr(cam3d, "PixelFormat", "Coord3D_ABCY16");
+//    setNodeStr(cam3d, "Scan3dOperatingMode", "Distance5000mmMultiFreq");
+////    setNode(cam3d, "Scan3dOperatingMode", "Distance3000mmSingleFreq");
+//    setNodeInt(cam3d, "Scan3dConfidenceThresholdMin", (int64_t)500);
+//    setNodeBool(cam3d, "Scan3dConfidenceThresholdEnable", false);
+//    setNodeStr(cam3d, "Scan3dCoordinateSelector", "CoordinateC");
+
+    // show widrh and height
+    int64_t width, height;
+    getNodeInt(cam2d, "Width", &width);
+    getNodeInt(cam2d, "Height", &height);
+    std::cout << "Width: " << width << std::endl;
+    std::cout << "Height: " << height << std::endl;
+
+    // start stream
+    startStream(cam2d);
+
+    // get data
+    cv::Mat image(height, width, CV_8UC4);
+    getImage(cam2d, image.data, image.cols, image.rows, image.step);
+
+    // show image
+    cv::imshow("image", image);
+    cv::waitKey(0);
+
+    // stop stream
+    stopStream(cam2d);
+
+    // delete device
+    destroyCam(cam2d);
 
     // Destroy arena system
     DestroyArenaSystem(reinterpret_cast<Arena::ISystem *>(arenaSystemPtrInt));
@@ -396,7 +478,7 @@ int testHeliosDLLInterface() {
 
 int main() {
     try {
-        testHeliosDLLInterface();
+        testTritonDLLInterface();
     }
     catch (GenICam::GenericException &ge) {
         std::cout << "\nGenICam exception thrown: " << ge.what() << "\n";

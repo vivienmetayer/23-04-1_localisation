@@ -23,11 +23,15 @@ add_executable(TriangulationTest main.cpp)
 target_link_libraries(TriangulationTest triangulationLib ${OpenCV_LIBS})
 
 # Cam 3D
-add_library(Cam3dLib SHARED Cam3d.cpp Cam3d.h Cam3d_functions.cpp Cam3d_functions.h)
+add_library(Cam3dLib SHARED Cam3d.cpp Cam3d.h Cam3d_functions.cpp Cam3d_functions.h ArenaCam.cpp ArenaCam.h Cam2d.cpp Cam2d.h)
 target_link_libraries(Cam3dLib ${OpenCV_LIBS})
 target_include_directories(Cam3dLib PUBLIC ${ArenaSDK_INCLUDE_DIR} ${GenICam_INCLUDE_DIR})
 target_link_directories(Cam3dLib PUBLIC ${ArenaSDK_LIB_DIR} ${GenICam_LIB_DIR})
-target_link_libraries(Cam3dLib Arenad_v140)
+if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+    target_link_libraries(Cam3dLib Arenad_v140)
+else()
+    target_link_libraries(Cam3dLib Arena_v140)
+endif()
 target_compile_definitions(Cam3dLib PRIVATE CAM3DLIB)
 
 add_executable(Cam3DTest cam3d_main.cpp)

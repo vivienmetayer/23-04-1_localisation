@@ -15,47 +15,73 @@ int getNumDevices(Arena::ISystem *system) {
     return (int)system->GetDevices().size();
 }
 
-Cam3d* createCam3d(int a) {
-    return nullptr;
-}
-
-std::string getDeviceIPAddress(Arena::ISystem *system, int deviceIndex) {
+void getDeviceIPAddress(Arena::ISystem *system, int deviceIndex, char *ipAddressOut) {
     Arena::InterfaceInfo interfaceInfo;
     system->UpdateDevices(100);
     std::vector<Arena::DeviceInfo> deviceInfos = system->GetDevices();
-    return const_cast<char *>(deviceInfos[deviceIndex].IpAddressStr().c_str());
+    std::string ipAddress = deviceInfos[deviceIndex].IpAddressStr().c_str();
+    for (int i = 0; i < ipAddress.size(); i++) {
+        ipAddressOut[i] = ipAddress[i];
+    }
 }
 
-std::string getDeviceModelName(Arena::ISystem *system, int deviceIndex) {
+void getDeviceModelName(Arena::ISystem *system, int deviceIndex, char *modelNameOut) {
     Arena::InterfaceInfo interfaceInfo;
     system->UpdateDevices(100);
     std::vector<Arena::DeviceInfo> deviceInfos = system->GetDevices();
-    return const_cast<char *>(deviceInfos[deviceIndex].ModelName().c_str());
+    std::string modelName = deviceInfos[deviceIndex].ModelName().c_str();
+    for (int i = 0; i < modelName.size(); ++i) {
+        modelNameOut[i] = modelName[i];
+    }
 }
 
-Cam3d* createCam3d(Arena::ISystem *system, int deviceIndex) {
-    return new Cam3d(system, deviceIndex);
+ArenaCam* createCam(Arena::ISystem *system, int deviceIndex) {
+    return new ArenaCam(system, deviceIndex);
 }
 
-Cam3d* createCam3dForcedIP(Arena::ISystem *system, int deviceIndex,
+ArenaCam* createCamForcedIP(Arena::ISystem *system, int deviceIndex,
                            uint64_t forcedIp, uint64_t subnetMask, uint64_t gateway) {
-    return new Cam3d(system, deviceIndex, forcedIp, subnetMask, gateway);
+    return new ArenaCam(system, deviceIndex, forcedIp, subnetMask, gateway);
 }
 
-void destroyCam3d(Cam3d *cam3d) {
-    delete cam3d;
+void destroyCam(ArenaCam *arenaCam) {
+    delete arenaCam;
 }
 
-void setNode(Cam3d *cam3d, std::string nodeName, std::string nodeValue) {
-    cam3d->setNode(nodeName, nodeValue);
+void setNodeStr(ArenaCam *cam, const char* nodeName, const char* nodeValue) {
+    cam->setNodeStr(nodeName, nodeValue);
 }
 
-void startStream(Cam3d *cam3d) {
-    cam3d->startStream();
+void setNodeInt(ArenaCam *cam, const char* nodeName, int64_t nodeValue) {
+    cam->setNodeInt(nodeName, nodeValue);
 }
 
-void stopStream(Cam3d *cam3d) {
-    cam3d->stopStream();
+void setNodeBool(ArenaCam *cam, const char* nodeName, bool nodeValue) {
+    cam->setNodeBool(nodeName, nodeValue);
+}
+
+void getNodeStr(ArenaCam *cam, const char* nodeName, char* nodeValue) {
+    std::string str;
+    cam->getNodeStr(nodeName, str);
+    for (int i = 0; i < str.size(); i++) {
+        nodeValue[i] = str[i];
+    }
+}
+
+void getNodeInt(ArenaCam *cam, const char* nodeName, int64_t *nodeValue) {
+    cam->getNodeInt(nodeName, nodeValue);
+}
+
+void getNodeBool(ArenaCam *cam, const char* nodeName, bool *nodeValue) {
+    cam->getNodeBool(nodeName, nodeValue);
+}
+
+void startStream(ArenaCam *cam) {
+    cam->startStream();
+}
+
+void stopStream(ArenaCam *cam) {
+    cam->stopStream();
 }
 
 int getData(Cam3d *cam3d, double* points, uint64_t timeout) {
@@ -67,4 +93,10 @@ int getData(Cam3d *cam3d, double* points, uint64_t timeout) {
         points[i * 3 + 2] = cvPoints[i].z;
     }
     return numPoints;
+}
+
+int getImage(Cam2d *cam2d, unsigned char* imagePtr, int width, int height, int stride, uint64_t timeout) {
+    cv::Mat image(height, width, CV_8UC4, imagePtr, stride);
+    cam2d->getImage(image, timeout);
+    return 0;
 }
