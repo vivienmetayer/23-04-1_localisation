@@ -28,7 +28,7 @@ DLL_EXPORT_C void getNodeInt(ArenaCam *cam, const char* nodeName, int64_t *nodeV
 DLL_EXPORT_C void getNodeBool(ArenaCam *cam, const char* nodeName, bool *nodeValue);
 DLL_EXPORT_C void startStream(ArenaCam *cam);
 DLL_EXPORT_C void stopStream(ArenaCam *cam);
-DLL_EXPORT_C int getData(Cam3d *cam3d, double* points, uint64_t timeout = 1000);
+DLL_EXPORT_C int getData(Cam3d *cam3d, double* points, uint16_t *luminance, uint64_t timeout = 1000);
 DLL_EXPORT_C int getImage(Cam2d *cam2d, unsigned char* imagePtr, int width, int height, int stride, uint64_t timeout = 1000);
 
 

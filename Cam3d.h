@@ -20,7 +20,7 @@ public:
           uint64_t forcedIp, uint64_t subnetMask, uint64_t gateway);
     ~Cam3d();
 
-    int getData(std::vector<cv::Point3d> &points, uint64_t timeout = 1000);
+    int getData(std::vector<cv::Point3d> &points, std::vector<std::vector<uint16_t>> &luminance, uint64_t timeout = 1000);
 };
 
 

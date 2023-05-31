@@ -376,9 +376,10 @@ int testHeliosDLLInterface() {
 
     // get data
     std::vector<double> pointsData(3 * 640 * 480);
+    std::vector<uint16_t> luminanceData(640 * 480);
     int numPoints;
     for (int i = 0; i < 5; ++i) {
-        numPoints = getData(cam3d, pointsData.data());
+        numPoints = getData(cam3d, pointsData.data(), luminanceData.data());
         std::cout << "Points: " << numPoints << std::endl;
     }
     pointsData.resize(numPoints * 3);

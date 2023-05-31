@@ -84,13 +84,23 @@ void stopStream(ArenaCam *cam) {
     cam->stopStream();
 }
 
-int getData(Cam3d *cam3d, double* points, uint64_t timeout) {
+int getData(Cam3d *cam3d, double* points, uint16_t *luminance, uint64_t timeout) {
     std::vector<cv::Point3d> cvPoints;
-    int numPoints = cam3d->getData(cvPoints, timeout);
+    std::vector<std::vector<uint16_t>> lum;
+    int numPoints = cam3d->getData(cvPoints, lum, timeout);
+
+    // copy points to points array
     for (int i = 0; i < numPoints; i++) {
         points[i * 3] = cvPoints[i].x;
         points[i * 3 + 1] = cvPoints[i].y;
         points[i * 3 + 2] = cvPoints[i].z;
+    }
+
+    // copy luminance to lum array
+    for (int i = 0; i < lum.size(); i++) {
+        for (int j = 0; j < lum[i].size(); j++) {
+            luminance[i * lum[i].size() + j] = lum[i][j];
+        }
     }
     return numPoints;
 }
