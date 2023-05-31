@@ -1,7 +1,6 @@
 #include "triangulation.h"
 
-int main()
-{
+void testCalibration() {
     // load image
     cv::Mat image = cv::imread(R"(F:\Travail\Affaires\ARDPI\23-04-1 Systeme de localisation\data\board_view.png)");
     cv::Mat imageGray;
@@ -36,6 +35,47 @@ int main()
     calibrate(cornersArray.data(), objectPointsArray.data(),
               n, imageGray.cols, imageGray.rows,
               R"(F:\Travail\Affaires\ARDPI\23-04-1 Systeme de localisation\data\calib_image.exr)");
+}
 
+void testfindMmarkers() {
+    // load test image
+    cv::Mat image = cv::imread(R"(C:\Travail\Clients\ARDPI\23-02-1 Controle de position emetteur recepteur\dev\dodecaruco\images\calibration\cam1\image0.jpg)");
+    cv::Mat imageGray;
+    cv::cvtColor(image, imageGray, cv::COLOR_BGR2GRAY);
+    std::cout << "image loaded" << std::endl;
+
+    // find markers
+    int maxMarkers = 10;
+    int numMarkers;
+    std::vector<double> cornersArray(2 * 4 * maxMarkers);
+    std::vector<int> ids(maxMarkers);
+    detectMarkers(imageGray.data, imageGray.cols, imageGray.rows, (int) imageGray.step,
+                  cornersArray.data(), ids.data(), &numMarkers, maxMarkers);
+    std::cout << "Found " << numMarkers << " markers" << std::endl;
+    ids.resize(numMarkers);
+    cornersArray.resize(2 * 4 * numMarkers);
+
+    // draw markers
+    std::vector<std::vector<cv::Point2f>> corners;
+    for (int i = 0; i < numMarkers; ++i)
+    {
+        std::vector<cv::Point2f> markerCorners;
+        for (int j = 0; j < 4; ++j)
+        {
+            markerCorners.emplace_back(cornersArray[2 * (4 * i + j)], cornersArray[2 * (4 * i + j) + 1]);
+        }
+        corners.push_back(markerCorners);
+    }
+    cv::aruco::drawDetectedMarkers(image, corners, ids);
+
+    // show image
+    cv::namedWindow("markers", cv::WINDOW_NORMAL);
+    cv::imshow("markers", image);
+    cv::waitKey(0);
+}
+
+int main()
+{
+    testfindMmarkers();
     return 0;
 }

@@ -253,3 +253,26 @@ double calibrateCamera(double *corners, int *ids, const int *markersPerFrame, in
 
     return error;
 }
+
+int detectMarkers(unsigned char *imagePtr, int width, int height, int lineWidth,
+                  double *corners, int *ids, int *numMarkers, int maxMarkers) {
+    cv::Mat image(height, width, CV_8UC1, imagePtr, lineWidth);
+    cv::aruco::Dictionary dictionary = cv::aruco::getPredefinedDictionary(cv::aruco::DICT_4X4_50);
+
+    cv::aruco::ArucoDetector detector(dictionary);
+    std::vector<std::vector<cv::Point2f>> markerCorners;
+    std::vector<int> markerIds;
+    detector.detectMarkers(image, markerCorners, markerIds);
+
+    // output markers positions and ids
+    int size = std::min(maxMarkers, (int) markerIds.size());
+    for (int i = 0; i < size; ++i) {
+        ids[i] = markerIds[i];
+        for (int j = 0; j < 4; ++j) {
+            corners[2 * (i * 4 + j)] = markerCorners[i][j].x;
+            corners[2 * (i * 4 + j) + 1] = markerCorners[i][j].y;
+        }
+    }
+    *numMarkers = size;
+    return 0;
+}
