@@ -30,6 +30,10 @@ DLL_EXPORT_C void startStream(ArenaCam *cam);
 DLL_EXPORT_C void stopStream(ArenaCam *cam);
 DLL_EXPORT_C int getData(Cam3d *cam3d, double* points, uint16_t *luminance, uint64_t timeout = 1000);
 DLL_EXPORT_C int getImage(Cam2d *cam2d, unsigned char* imagePtr, int width, int height, int stride, uint64_t timeout = 1000);
+DLL_EXPORT_C double calibrateCamera(double *corners, int *ids, const int *markersPerFrame, int numFrames,
+                       int boardWidth, int boardHeight, double checkerSize, double markerSize,
+                       double *cameraMatrix, double *distCoeffs);
+DLL_EXPORT_C int stereoMatch(double *points3dData, double *points2dData, int numPoints, double *rotationMatrix, double *translationVector);
 
 
 #endif //INC_23_04_1_LOCALISATION_CAM3D_FUNCTIONS_H

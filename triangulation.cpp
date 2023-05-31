@@ -195,3 +195,61 @@ void readCalibrationImage(const char* calib_image_path, float* map2D)
         }
     }
 }
+
+double calibrateCamera(double *corners, int *ids, const int *markersPerFrame, int numFrames,
+                       int boardWidth, int boardHeight, double *cameraMatrix, double *distCoeffs)
+{
+    // create board
+    cv::aruco::Dictionary dictionary = cv::aruco::getPredefinedDictionary(cv::aruco::DICT_4X4_50);
+    cv::Size boardSize(boardWidth, boardHeight);
+    cv::Ptr <cv::aruco::CharucoBoard> board = cv::makePtr<cv::aruco::CharucoBoard>(boardSize, 95, 74, dictionary);
+
+    // create vectors
+    std::vector<std::vector<cv::Point2f>> allCorners;
+    std::vector<std::vector<int>> allIds;
+    std::vector <cv::Point3f> allObjectPoints;
+
+    // fill vectors
+    int offset = 0;
+    for (int i = 0; i < numFrames; i++)
+    {
+        std::vector<int> frameIds;
+        std::vector <cv::Point2f> frameCorners;
+        std::vector <cv::Point3f> frameObjectPoints;
+        for (int j = 0; j < markersPerFrame[i]; j++)
+        {
+            frameCorners.emplace_back(corners[2 * (j + offset)],
+                                      corners[2 * (j + offset) + 1]);
+            frameIds.push_back(ids[j + offset]);
+            allObjectPoints.push_back(board->getChessboardCorners()[ids[j + offset]]);
+        }
+        offset += markersPerFrame[i];
+        allCorners.push_back(frameCorners);
+        allIds.push_back(frameIds);
+    }
+
+    // calibrate camera
+    cv::Mat cameraMatrixMat(3, 3, CV_64F, cameraMatrix);
+    cv::Mat distCoeffsMat(1, 5, CV_64F, distCoeffs);
+    double error = cv::aruco::calibrateCameraCharuco(
+            allCorners, allIds, board,
+            cv::Size(2592, 1942),
+            cameraMatrixMat, distCoeffsMat);
+//    double error = cv::aruco::calibrateCameraAruco(
+//            allCorners, allIds, allMarkersPerFrame, board,
+//            cv::Size(2592, 1942), cameraMatrixMat, distCoeffsMat);
+
+    // fill camera matrix
+    for (int i = 0; i < 9; ++i)
+    {
+        cameraMatrix[i] = cameraMatrixMat.at<double>(i);
+    }
+
+    // fill distortion coefficients
+    for (int i = 0; i < 5; ++i)
+    {
+        distCoeffs[i] = distCoeffsMat.at<double>(i);
+    }
+
+    return error;
+}

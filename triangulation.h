@@ -15,4 +15,7 @@ DLL_EXPORT void calibrate(double* corners, double* corners3D, int numCorners,
 
 DLL_EXPORT void readCalibrationImage(const char* calib_image_path, float* map2D);
 
+DLL_EXPORT double calibrateCamera(double *corners, int *ids, const int *markersPerFrame, int numFrames,
+                       int boardWidth, int boardHeight, double *cameraMatrix, double *distCoeffs);
+
 #endif //INC_23_04_1_LOCALISATION_TRIANGULATION_H

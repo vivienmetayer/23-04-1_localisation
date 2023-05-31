@@ -48,8 +48,8 @@ int Cam3d::getData(std::vector<cv::Point3d> &points, std::vector<std::vector<uin
 
             luminance[i][j] = l;
 
-            if (iz == -1)
-                continue;
+//            if (iz == -1)
+//                continue;
 
             uint16_t x = reinterpret_cast<const uint16_t &>(ix);
             uint16_t y = reinterpret_cast<const uint16_t &>(iy);
