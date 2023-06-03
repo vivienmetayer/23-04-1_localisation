@@ -255,7 +255,7 @@ double calibrateCamera(double *corners, int *ids, const int *markersPerFrame, in
 }
 
 int detectMarkers(unsigned char *imagePtr, int width, int height, int lineWidth,
-                  double *corners, int *ids, int *numMarkers, int maxMarkers) {
+                  double *corners, int *ids, int *numMarkers, int maxMarkers, bool drawMarkers) {
     cv::Mat image(height, width, CV_8UC1, imagePtr, lineWidth);
     cv::aruco::Dictionary dictionary = cv::aruco::getPredefinedDictionary(cv::aruco::DICT_4X4_50);
 
@@ -274,5 +274,15 @@ int detectMarkers(unsigned char *imagePtr, int width, int height, int lineWidth,
         }
     }
     *numMarkers = size;
+
+    // draw markers
+    if (drawMarkers) {
+        std::vector<std::vector<cv::Point2f>> markersToDraw;
+        std::vector<int>idsToDraw;
+        markersToDraw.insert(markersToDraw.end(), markerCorners.begin(), markerCorners.begin() + size);
+        idsToDraw.insert(idsToDraw.end(), markerIds.begin(), markerIds.begin() + size);
+        cv::aruco::drawDetectedMarkers(image, markersToDraw, idsToDraw);
+    }
+
     return 0;
 }

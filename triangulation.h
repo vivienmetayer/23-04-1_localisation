@@ -19,5 +19,5 @@ DLL_EXPORT double calibrateCamera(double *corners, int *ids, const int *markersP
                        int boardWidth, int boardHeight, double *cameraMatrix, double *distCoeffs);
 
 DLL_EXPORT int detectMarkers(unsigned char *imagePtr, int width, int height, int lineWidth,
-                             double *corners, int *ids, int *numMarkers, int maxMarkers);
+                             double *corners, int *ids, int *numMarkers, int maxMarkers, bool drawMarkers);
 #endif //INC_23_04_1_LOCALISATION_TRIANGULATION_H

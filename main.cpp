@@ -50,7 +50,7 @@ void testfindMmarkers() {
     std::vector<double> cornersArray(2 * 4 * maxMarkers);
     std::vector<int> ids(maxMarkers);
     detectMarkers(imageGray.data, imageGray.cols, imageGray.rows, (int) imageGray.step,
-                  cornersArray.data(), ids.data(), &numMarkers, maxMarkers);
+                  cornersArray.data(), ids.data(), &numMarkers, maxMarkers, true);
     std::cout << "Found " << numMarkers << " markers" << std::endl;
     ids.resize(numMarkers);
     cornersArray.resize(2 * 4 * numMarkers);
