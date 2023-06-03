@@ -168,6 +168,7 @@ double calibrateCamera(double *corners, int *ids, const int *markersPerFrame, in
 }
 
 int stereoMatch(double *points3dData, double *points2dData, int numPoints,
+                double *cameraMatrix, double *distCoeffs,
                 double *rotationMatrix, double *translationVector) {
     // create vectors of points
     std::vector<cv::Point3d> points3d(numPoints);
@@ -182,7 +183,9 @@ int stereoMatch(double *points3dData, double *points2dData, int numPoints,
 
     // solve
     cv::Mat rvec, tvec;
-    cv::solvePnP(points3d, points2d, cv::Mat::eye(3, 3, CV_64F), cv::Mat::zeros(5, 1, CV_64F), rvec, tvec);
+    cv::Mat cameraMatrixMat(3, 3, CV_64F, cameraMatrix);
+    cv::Mat distCoeffsMat(1, 5, CV_64F, distCoeffs);
+    cv::solvePnP(points3d, points2d, cameraMatrixMat, distCoeffsMat, rvec, tvec);
 
     // fill output
     cv::Mat rotationMatrixMat(3, 3, CV_64F, rotationMatrix);

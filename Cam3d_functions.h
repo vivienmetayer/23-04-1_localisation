@@ -33,7 +33,9 @@ DLL_EXPORT_C int getImage(Cam2d *cam2d, unsigned char* imagePtr, int width, int 
 DLL_EXPORT_C double calibrateCamera(double *corners, int *ids, const int *markersPerFrame, int numFrames,
                        int boardWidth, int boardHeight, double checkerSize, double markerSize,
                        double *cameraMatrix, double *distCoeffs);
-DLL_EXPORT_C int stereoMatch(double *points3dData, double *points2dData, int numPoints, double *rotationMatrix, double *translationVector);
+DLL_EXPORT_C int stereoMatch(double *points3dData, double *points2dData, int numPoints,
+                             double *cameraMatrix, double *distCoeffs,
+                             double *rotationMatrix, double *translationVector);
 
 
 #endif //INC_23_04_1_LOCALISATION_CAM3D_FUNCTIONS_H
