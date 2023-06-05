@@ -26,7 +26,7 @@ bool Aligned(std::vector<cv::Point3f>& points)
     cv::Point3f AC = points[2] - points[0];
     AB = (1 / norm(AB)) * AB;
     AC = (1 / norm(AC)) * AC;
-    return abs(AB.x * AC.x + AB.y * AC.y) > 0.5;
+    return abs(AB.x * AC.x + AB.y * AC.y) > 0.9;
 }
 
 std::vector<double> getBarycentricCoordinates(cv::Point2f p, std::vector<cv::Point2f>& points)
@@ -67,7 +67,7 @@ cv::Point3f applyBarycentricCoords(std::vector<double>& coords, std::vector<cv::
 
 int findBoardCorners(unsigned char *imagePtr, int width, int height, int lineWidth,
                      int boardWidth, int boardHeight, float squareLength, float markerLength,
-                     double *corners, double *objectPoints, int *ids)
+                     double *corners, double *objectPoints, int *ids, bool drawMarkers)
 {
     // get image from LabVIEW pointer
     cv::Mat image(cv::Size(width, height), CV_8UC1, imagePtr, lineWidth);
@@ -108,6 +108,10 @@ int findBoardCorners(unsigned char *imagePtr, int width, int height, int lineWid
     {
         ids[i] = charucoIds[i];
     }
+
+    // draw markers
+    if (drawMarkers)
+        cv::aruco::drawDetectedCornersCharuco(image, charucoCorners, charucoIds);
 
     return (int) charucoCorners.size();
 }

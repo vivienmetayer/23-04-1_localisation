@@ -1,5 +1,26 @@
 #include "triangulation.h"
 
+int testFindBoardCorners() {
+    cv::Mat image = cv::imread(R"(E:\images\stereo\cam3d.png)");
+    cv::Mat imageGray;
+    cv::cvtColor(image, imageGray, cv::COLOR_BGR2GRAY);
+
+    // find corners
+    std::vector<double> cornersArray(2 * 11 * 11);
+    std::vector<double> objectPointsArray(3 * 11 * 11);
+    std::vector<int> ids(11 * 11);
+    int n = findBoardCorners(imageGray.data, imageGray.cols, imageGray.rows, (int) imageGray.step,
+                             6, 4, 40, 31,
+                             cornersArray.data(), objectPointsArray.data(), ids.data(), true);
+
+    // show image
+    cv::namedWindow("corners", cv::WINDOW_NORMAL);
+    cv::imshow("corners", imageGray);
+    cv::waitKey(0);
+
+    return n;
+}
+
 void testCalibration() {
     // load image
     cv::Mat image = cv::imread(R"(F:\Travail\Affaires\ARDPI\23-04-1 Systeme de localisation\data\board_view.png)");
@@ -12,7 +33,7 @@ void testCalibration() {
     std::vector<int> ids(11 * 11);
     int n = findBoardCorners(imageGray.data, imageGray.cols, imageGray.rows, (int) imageGray.step,
                              11, 11, 17, 13,
-                             cornersArray.data(), objectPointsArray.data(), ids.data());
+                             cornersArray.data(), objectPointsArray.data(), ids.data(), true);
     std::cout << "Found " << n << " corners" << std::endl;
     ids.resize(n);
 
@@ -76,6 +97,7 @@ void testfindMmarkers() {
 
 int main()
 {
-    testfindMmarkers();
-    return 0;
+//    testfindMmarkers();
+    int n = testFindBoardCorners();
+    return n;
 }

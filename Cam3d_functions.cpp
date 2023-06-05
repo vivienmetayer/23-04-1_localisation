@@ -167,7 +167,7 @@ double calibrateCamera(double *corners, int *ids, const int *markersPerFrame, in
     return error;
 }
 
-int stereoMatch(double *points3dData, double *points2dData, int numPoints,
+int stereoMatch(const double *points3dData, const double *points2dData, int numPoints,
                 double *cameraMatrix, double *distCoeffs,
                 double *rotationMatrix, double *translationVector) {
     // create vectors of points
@@ -188,7 +188,7 @@ int stereoMatch(double *points3dData, double *points2dData, int numPoints,
     cv::solvePnP(points3d, points2d, cameraMatrixMat, distCoeffsMat, rvec, tvec);
 
     // fill output
-    cv::Mat rotationMatrixMat(3, 3, CV_64F, rotationMatrix);
+    cv::Mat rotationMatrixMat(3, 3, CV_64F);
     cv::Rodrigues(rvec, rotationMatrixMat);
     for (int i = 0; i < 3; ++i) {
         translationVector[i] = tvec.at<double>(i);
@@ -196,5 +196,36 @@ int stereoMatch(double *points3dData, double *points2dData, int numPoints,
     for (int i = 0; i < 9; ++i) {
         rotationMatrix[i] = rotationMatrixMat.at<double>(i);
     }
+    return 0;
+}
+
+int project3DPointsColorPosition(double *points3dData, int numPoints,
+                                 double *cameraMatrix, double *distCoeffs,
+                                 double *rotationMatrix, double *translationVector,
+                                 double *points2dData) {
+    // create vectors of points
+    std::vector<cv::Point3d> points3d(numPoints);
+    for (int i = 0; i < numPoints; i++) {
+        points3d[i].x = points3dData[i * 3];
+        points3d[i].y = points3dData[i * 3 + 1];
+        points3d[i].z = points3dData[i * 3 + 2];
+    }
+
+    // project
+    cv::Mat rotationMatrixMat(3, 3, CV_64F, rotationMatrix);
+    cv::Mat tvec(3, 1, CV_64F, translationVector);
+    cv::Mat cameraMatrixMat(3, 3, CV_64F, cameraMatrix);
+    cv::Mat distCoeffsMat(1, 5, CV_64F, distCoeffs);
+    cv::Mat rvec(3, 1, CV_64F);
+    cv::Rodrigues(rotationMatrixMat, rvec);
+    std::vector<cv::Point2d> points2d;
+    cv::projectPoints(points3d, rvec, tvec, cameraMatrixMat, distCoeffsMat, points2d);
+
+    // fill output
+    for (int i = 0; i < numPoints; i++) {
+        points2dData[i * 2] = points2d[i].x;
+        points2dData[i * 2 + 1] = points2d[i].y;
+    }
+
     return 0;
 }
