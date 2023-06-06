@@ -61,6 +61,10 @@ void setNodeBool(ArenaCam *cam, const char* nodeName, bool nodeValue) {
     cam->setNodeBool(nodeName, nodeValue);
 }
 
+void setNodeDouble(ArenaCam *cam, const char* nodeName, double nodeValue) {
+    cam->setNodeDouble(nodeName, nodeValue);
+}
+
 void getNodeStr(ArenaCam *cam, const char* nodeName, char* nodeValue) {
     std::string str;
     cam->getNodeStr(nodeName, str);
@@ -75,6 +79,10 @@ void getNodeInt(ArenaCam *cam, const char* nodeName, int64_t *nodeValue) {
 
 void getNodeBool(ArenaCam *cam, const char* nodeName, bool *nodeValue) {
     cam->getNodeBool(nodeName, nodeValue);
+}
+
+void getNodeDouble(ArenaCam *cam, const char* nodeName, double *nodeValue) {
+    cam->getNodeDouble(nodeName, nodeValue);
 }
 
 void startStream(ArenaCam *cam) {
@@ -110,6 +118,43 @@ int getImage(Cam2d *cam2d, unsigned char* imagePtr, int width, int height, int s
     cv::Mat image(height, width, CV_8UC4, imagePtr, stride);
     cam2d->getImage(image, timeout);
     return 0;
+}
+
+int findCircleGrid(const unsigned char *imagePtr, int width, int height, int stride,
+                   int boardWidth, int boardHeight, double *corners, int *numCorners) {
+    // get image
+    cv::Mat image(height, width, CV_8UC1, (void*)imagePtr, stride);
+
+    // create blob detector
+    cv::SimpleBlobDetector::Params bright_params;
+    bright_params.filterByColor = true;
+    bright_params.blobColor = 255; // white circles in the calibration target
+    bright_params.thresholdStep = 2;
+    bright_params.minArea = 10.0;  // Min/max area can be adjusted based on size of dots in image
+    bright_params.maxArea = 1000.0;
+    cv::Ptr<cv::SimpleBlobDetector> blob_detector = cv::SimpleBlobDetector::create(bright_params);
+
+    // Find max value in input image
+    double min_value, max_value;
+    cv::minMaxIdx(image, &min_value, &max_value);
+
+    // Scale image to 8-bit, using full 8-bit range
+    cv::Mat image_8bit;
+    image.convertTo(image_8bit, CV_8U, 255.0 / max_value);
+
+    // find circle grid
+    cv::Size pattern_size(boardWidth, boardHeight);
+    std::vector<cv::Point2f> grid_centers;
+    bool is_found = cv::findCirclesGrid(image_8bit, pattern_size, grid_centers, cv::CALIB_CB_SYMMETRIC_GRID, blob_detector);
+
+    // fill output
+    *numCorners = (int)grid_centers.size();
+    for (int i = 0; i < grid_centers.size(); i++) {
+        corners[i * 2] = grid_centers[i].x;
+        corners[i * 2 + 1] = grid_centers[i].y;
+    }
+
+    return is_found ? 1 : 0;
 }
 
 double calibrateCamera(double *corners, int *ids, const int *markersPerFrame, int numFrames,
@@ -228,4 +273,32 @@ int project3DPointsColorPosition(double *points3dData, int numPoints,
     }
 
     return 0;
+}
+
+void extractColors(const unsigned char *imagePtr, int width, int height, int stride,
+                   const double *points2dData, int numPoints, uint8_t *colors) {
+    // create image
+    cv::Mat image(height, width, CV_8UC4, (void *) imagePtr, stride);
+
+    // create vectors of points
+    std::vector<cv::Point2f> points2d(numPoints);
+    for (int i = 0; i < numPoints; i++) {
+        points2d[i].x = points2dData[i * 2];
+        points2d[i].y = points2dData[i * 2 + 1];
+    }
+
+    // extract colors
+    std::vector<cv::Vec4b> colorsVec(numPoints);
+    cv::Mat points2dMat(points2d);
+    cv::Mat imageMat(image);
+    cv::Mat colorsMat(colorsVec);
+    cv::remap(imageMat, colorsMat, points2dMat, cv::Mat(), cv::INTER_LINEAR);
+
+    // fill output
+    for (int i = 0; i < numPoints; i++) {
+        colors[i * 4] = colorsVec[i][0];
+        colors[i * 4 + 1] = colorsVec[i][1];
+        colors[i * 4 + 2] = colorsVec[i][2];
+        colors[i * 4 + 3] = colorsVec[i][3];
+    }
 }

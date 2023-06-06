@@ -23,9 +23,11 @@ public:
     void setNodeStr(const std::string& nodeName, const std::string& nodeValue);
     void setNodeInt(const std::string& nodeName, int64_t nodeValue);
     void setNodeBool(const std::string& nodeName, bool nodeValue);
+    void setNodeDouble(const std::string& nodeName, double nodeValue);
     void getNodeStr(const std::string& nodeName, std::string& nodeValue);
     void getNodeInt(const std::string& nodeName, int64_t *nodeValue);
     void getNodeBool(const std::string& nodeName, bool *nodeValue);
+    void getNodeDouble(const std::string& nodeName, double *nodeValue);
     void startStream();
     void stopStream();
 

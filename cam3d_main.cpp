@@ -477,21 +477,62 @@ int testTritonDLLInterface() {
     return 0;
 }
 
+void testFindCircleGrid() {
+    cv::Mat image = cv::imread(R"(C:\Users\Vivien\Documents\ShareX\Screenshots\2023-06\2023_06_06_chrome_1N.png)", cv::IMREAD_GRAYSCALE);
+    std::vector<double> cornersData(4 * 5 * 2);
+    int numCorners;
+    int found = findCircleGrid(image.data, image.cols, image.rows, (int)image.step,
+                   5, 4, cornersData.data(), &numCorners);
+
+    std::vector<cv::Point2f> corners;
+    for (int i = 0; i < numCorners; ++i) {
+        corners.emplace_back(cornersData[2*i], cornersData[2*i+1]);
+    }
+
+    std::cout << "Found: " << found << std::endl;
+
+    // show image
+    cv::Mat imageColor;
+    cv::cvtColor(image, imageColor, cv::COLOR_GRAY2BGR);
+    std::cout << "num channels: " << cv::Mat(corners).channels() << " depth: " << cv::Mat(corners).depth() << std::endl;
+    std::cout << CV_32F << std::endl;
+    cv::drawChessboardCorners(imageColor, cv::Size(5, 4), cv::Mat(corners), found);
+    cv::imshow("image", imageColor);
+    cv::waitKey(0);
+}
+
+void testExtractColors() {
+    std::vector<double> points2dData {100, 100, 200, 200, 300, 300};
+    cv::Mat image = cv::imread(R"(C:\Users\Vivien\Documents\ShareX\Screenshots\2023-06\2023_06_06_chrome_1N.png)");
+
+    // turn into 4 channels image
+    cv::Mat image4Channels;
+    cv::cvtColor(image, image4Channels, cv::COLOR_BGR2BGRA);
+
+    // extract colors
+    std::vector<uint8_t> colors(points2dData.size() / 2 * 4);
+    extractColors(image4Channels.data, image4Channels.cols, image4Channels.rows, (int)image4Channels.step,
+                  points2dData.data(), points2dData.size() / 2, colors.data());
+}
+
 int main() {
-    try {
-        testTritonDLLInterface();
-    }
-    catch (GenICam::GenericException &ge) {
-        std::cout << "\nGenICam exception thrown: " << ge.what() << "\n";
-        return -1;
-    }
-    catch (std::exception &ex) {
-        std::cout << "\nStandard exception thrown: " << ex.what() << "\n";
-        return -1;
-    }
-    catch (...) {
-        std::cout << "\nUnexpected exception thrown\n";
-        return -1;
-    }
+//    try {
+//        testTritonDLLInterface();
+//    }
+//    catch (GenICam::GenericException &ge) {
+//        std::cout << "\nGenICam exception thrown: " << ge.what() << "\n";
+//        return -1;
+//    }
+//    catch (std::exception &ex) {
+//        std::cout << "\nStandard exception thrown: " << ex.what() << "\n";
+//        return -1;
+//    }
+//    catch (...) {
+//        std::cout << "\nUnexpected exception thrown\n";
+//        return -1;
+//    }
+
+    testExtractColors();
+
     return 0;
 }

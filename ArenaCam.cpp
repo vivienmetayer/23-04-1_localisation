@@ -54,6 +54,11 @@ void ArenaCam::setNodeBool(const std::string &nodeName, bool nodeValue) {
     Arena::SetNodeValue<bool>(pNodeMap, nodeName.c_str(), nodeValue);
 }
 
+void ArenaCam::setNodeDouble(const std::string& nodeName, double nodeValue) {
+    GenApi::INodeMap* pNodeMap = _device->GetNodeMap();
+    Arena::SetNodeValue<double>(pNodeMap, nodeName.c_str(), nodeValue);
+}
+
 void ArenaCam::startStream() {
     _device->StartStream();
 }
@@ -76,4 +81,9 @@ void ArenaCam::getNodeInt(const std::string &nodeName, int64_t *nodeValue) {
 void ArenaCam::getNodeBool(const std::string &nodeName, bool *nodeValue) {
     GenApi::INodeMap* pNodeMap = _device->GetNodeMap();
     *nodeValue = Arena::GetNodeValue<bool>(pNodeMap, nodeName.c_str());
+}
+
+void ArenaCam::getNodeDouble(const std::string& nodeName, double *nodeValue) {
+    GenApi::INodeMap* pNodeMap = _device->GetNodeMap();
+    *nodeValue = Arena::GetNodeValue<double>(pNodeMap, nodeName.c_str());
 }

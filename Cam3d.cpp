@@ -26,8 +26,9 @@ int Cam3d::getData(std::vector<cv::Point3d> &points, std::vector<std::vector<uin
     size_t srcPixelSize = srcBpp / 8;
 
     // get scale
-    GenApi::INodeMap* pNodeMap = _device->GetNodeMap();
-    float scale = static_cast<float>(Arena::GetNodeValue<double>(pNodeMap, "Scan3dCoordinateScale"));
+//    GenApi::INodeMap* pNodeMap = _device->GetNodeMap();
+//    float scale = static_cast<float>(Arena::GetNodeValue<double>(pNodeMap, "Scan3dCoordinateScale"));
+    float scale = 1.0f;
 
     // get data ptr
     const uint8_t* dataPtr = pImage->GetData();
@@ -40,9 +41,9 @@ int Cam3d::getData(std::vector<cv::Point3d> &points, std::vector<std::vector<uin
     for (size_t i = 0; i < height; i++) {
         luminance[i].resize(width);
         for (size_t j = 0; j < width; j++) {
-            int16_t ix = *reinterpret_cast<const int16_t *>(pIn);
-            int16_t iy = *reinterpret_cast<const int16_t *>((pIn + 2));
-            int16_t iz = *reinterpret_cast<const int16_t *>((pIn + 4));
+            uint16_t ix = *reinterpret_cast<const uint16_t *>(pIn);
+            uint16_t iy = *reinterpret_cast<const uint16_t *>((pIn + 2));
+            uint16_t iz = *reinterpret_cast<const uint16_t *>((pIn + 4));
             uint16_t l = *reinterpret_cast<const uint16_t *>((pIn + 6));
             pIn += srcPixelSize;
 
