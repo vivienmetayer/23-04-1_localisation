@@ -26,7 +26,7 @@ bool Aligned(std::vector<cv::Point3f>& points)
     cv::Point3f AC = points[2] - points[0];
     AB = (1 / norm(AB)) * AB;
     AC = (1 / norm(AC)) * AC;
-    return abs(AB.x * AC.x + AB.y * AC.y) > 0.8;
+    return abs(AB.x * AC.x + AB.y * AC.y) > 0.75;
 }
 
 std::vector<double> getBarycentricCoordinates(cv::Point2f p, std::vector<cv::Point2f>& points)
@@ -128,6 +128,18 @@ int findBoardCorners(unsigned char *imagePtr, int width, int height, int lineWid
     return (int) charucoCorners.size();
 }
 
+bool isPointInTriangle(const cv::Point2f& p, const std::vector<cv::Point2f>& triangle) {
+    auto sign = [](const cv::Point2f p1, const cv::Point2f p2, const cv::Point2f p3) {
+        return (p1.x - p3.x) * (p2.y - p3.y) - (p2.x - p3.x) * (p1.y - p3.y);
+    };
+
+    const bool b1 = sign(p, triangle[0], triangle[1]) < 0.0f;
+    const bool b2 = sign(p, triangle[1], triangle[2]) < 0.0f;
+    const bool b3 = sign(p, triangle[2], triangle[0]) < 0.0f;
+
+    return ((b1 == b2) && (b2 == b3));
+}
+
 bool searchClosestPoints(cv::Point2f point,
                          const std::vector<cv::Point2f>& corners,
                          const std::vector<cv::Point3f>& objectPoints,
@@ -216,7 +228,7 @@ double calibrateCamera(double *corners, int *ids, const int *markersPerFrame, in
                        int boardWidth, int boardHeight, double *cameraMatrix, double *distCoeffs)
 {
     // create board
-    cv::aruco::Dictionary dictionary = cv::aruco::getPredefinedDictionary(cv::aruco::DICT_4X4_50);
+    cv::aruco::Dictionary dictionary = cv::aruco::getPredefinedDictionary(cv::aruco::DICT_4X4_250);
     cv::Size boardSize(boardWidth, boardHeight);
     cv::Ptr <cv::aruco::CharucoBoard> board = cv::makePtr<cv::aruco::CharucoBoard>(boardSize, 95, 74, dictionary);
 
@@ -268,6 +280,15 @@ double calibrateCamera(double *corners, int *ids, const int *markersPerFrame, in
     }
 
     return error;
+}
+
+void undistort(unsigned char *imagePtr, int width, int height, int lineWidth, double *cameraMatrix, double *distCoeffs) {
+    cv::Mat image(height, width, CV_8UC1, imagePtr, lineWidth);
+    cv::Mat imageUndistorted;
+    cv::Mat cameraMatrixMat(3, 3, CV_64F, cameraMatrix);
+    cv::Mat distCoeffsMat(1, 5, CV_64F, distCoeffs);
+    cv::undistort(image, imageUndistorted, cameraMatrixMat, distCoeffsMat);
+    imageUndistorted.copyTo(image);
 }
 
 int detectMarkers(unsigned char *imagePtr, int width, int height, int lineWidth,
