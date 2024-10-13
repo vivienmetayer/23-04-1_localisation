@@ -26,27 +26,39 @@ bool Aligned(std::vector<cv::Point3f>& points)
     cv::Point3f AC = points[2] - points[0];
     AB = (1 / norm(AB)) * AB;
     AC = (1 / norm(AC)) * AC;
-    return abs(AB.x * AC.x + AB.y * AC.y) > 0.9;
+    return abs(AB.x * AC.x + AB.y * AC.y) > 0.8;
 }
 
 std::vector<double> getBarycentricCoordinates(cv::Point2f p, std::vector<cv::Point2f>& points)
 {
-    double xa = points[0].x;
-    double xb = points[1].x;
-    double xc = points[2].x;
-    double xp = p.x;
+    // double xa = points[0].x;
+    // double xb = points[1].x;
+    // double xc = points[2].x;
+    // double xp = p.x;
+    //
+    // double ya = points[0].y;
+    // double yb = points[1].y;
+    // double yc = points[2].y;
+    // double yp = p.y;
+    //
+    // double v_num = yp - ya - (yb - ya) * (xp - xa) / (xb - xa);
+    // double v_den = yc - ya - (xc - xa) * (yb - ya) / (xb - xa);
+    // double v = v_num / v_den;
+    //
+    // double u = (xp - xa) / (xb - xa) - v * (xc - xa) / (xb - xa);
+    // return { 1 - u - v, u, v };
+    double area = (points[1].y - points[2].y) * (points[0].x - points[2].x) +
+                  (points[2].x - points[1].x) * (points[0].y - points[2].y);
 
-    double ya = points[0].y;
-    double yb = points[1].y;
-    double yc = points[2].y;
-    double yp = p.y;
+    double w0 = ((points[1].y - points[2].y) * (p.x - points[2].x) +
+                 (points[2].x - points[1].x) * (p.y - points[2].y)) / area;
 
-    double v_num = yp - ya - (yb - ya) * (xp - xa) / (xb - xa);
-    double v_den = yc - ya - (xc - xa) * (yb - ya) / (xb - xa);
-    double v = v_num / v_den;
+    double w1 = ((points[2].y - points[0].y) * (p.x - points[2].x) +
+                 (points[0].x - points[2].x) * (p.y - points[2].y)) / area;
 
-    double u = (xp - xa) / (xb - xa) - v * (xc - xa) / (xb - xa);
-    return { 1 - u - v, u, v };
+    double w2 = 1 - w0 - w1;
+
+    return { w0, w1, w2 };
 }
 
 cv::Point3f applyBarycentricCoords(std::vector<double>& coords, std::vector<cv::Point3f>& points)
@@ -73,7 +85,7 @@ int findBoardCorners(unsigned char *imagePtr, int width, int height, int lineWid
     cv::Mat image(cv::Size(width, height), CV_8UC1, imagePtr, lineWidth);
 
     // create board
-    cv::aruco::Dictionary dictionary = cv::aruco::getPredefinedDictionary(cv::aruco::DICT_4X4_100);
+    cv::aruco::Dictionary dictionary = cv::aruco::getPredefinedDictionary(cv::aruco::DICT_4X4_250);
     cv::Size boardSize(boardWidth, boardHeight);
     cv::aruco::CharucoBoard board(boardSize, squareLength, markerLength, dictionary);
 

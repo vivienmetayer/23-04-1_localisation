@@ -23,16 +23,18 @@ int testFindBoardCorners() {
 
 void testCalibration() {
     // load image
-    cv::Mat image = cv::imread(R"(F:\Travail\Affaires\ARDPI\23-04-1 Systeme de localisation\data\board_view.png)");
+    cv::Mat image = cv::imread(R"(D:\Travail\Affaires\ARDPI\triangulation_2\data\Triangulation\Cam1.png)");
     cv::Mat imageGray;
     cv::cvtColor(image, imageGray, cv::COLOR_BGR2GRAY);
 
     // find corners
-    std::vector<double> cornersArray(2 * 11 * 11);
-    std::vector<double> objectPointsArray(3 * 11 * 11);
-    std::vector<int> ids(11 * 11);
+    int boardWidth = 14;
+    int boardHeight = 9;
+    std::vector<double> cornersArray(2 * boardWidth * boardHeight);
+    std::vector<double> objectPointsArray(3 * boardWidth * boardHeight);
+    std::vector<int> ids(boardWidth * boardHeight);
     int n = findBoardCorners(imageGray.data, imageGray.cols, imageGray.rows, (int) imageGray.step,
-                             11, 11, 17, 13,
+                             boardWidth, boardHeight, 17, 13,
                              cornersArray.data(), objectPointsArray.data(), ids.data(), true);
     std::cout << "Found " << n << " corners" << std::endl;
     ids.resize(n);
@@ -55,7 +57,7 @@ void testCalibration() {
     // calibrate
     calibrate(cornersArray.data(), objectPointsArray.data(),
               n, imageGray.cols, imageGray.rows,
-              R"(F:\Travail\Affaires\ARDPI\23-04-1 Systeme de localisation\data\calib_image.exr)");
+              R"(D:\Travail\Affaires\ARDPI\triangulation_2\dev\python\TriangulationTest\calib.exr)");
 }
 
 void testfindMmarkers() {
@@ -95,9 +97,24 @@ void testfindMmarkers() {
     cv::waitKey(0);
 }
 
+void printBoard() {
+    // create board
+    int boardWidth = 14;
+    int boardHeight = 9;
+    float squareLength = 17;
+    float markerLength = 13;
+    cv::aruco::Dictionary dictionary = cv::aruco::getPredefinedDictionary(cv::aruco::DICT_4X4_250);
+    cv::Size boardSize(boardWidth, boardHeight);
+    cv::aruco::CharucoBoard board(boardSize, squareLength, markerLength, dictionary);
+
+    // print board
+    cv::Mat boardImage;
+    board.generateImage(cv::Size(1000, 1000), boardImage, 1, 1);
+    cv::imwrite(R"(D:\Travail\Affaires\ARDPI\triangulation_2\data\Triangulation\board.png)", boardImage);
+}
+
 int main()
 {
-//    testfindMmarkers();
-    int n = testFindBoardCorners();
-    return n;
+    testCalibration();
+    return 0;
 }

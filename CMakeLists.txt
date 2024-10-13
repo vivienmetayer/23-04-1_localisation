@@ -17,6 +17,7 @@ set(GenICam_LIB_DIR "" CACHE PATH "Path to GenICam lib folder")
 
 # Triangulation
 add_library(triangulationLib SHARED triangulation.cpp triangulation.h)
+target_include_directories(triangulationLib PUBLIC ${OpenCV_INCLUDE_DIRS})
 target_link_libraries(triangulationLib ${OpenCV_LIBS})
 
 add_executable(TriangulationTest main.cpp)
@@ -37,4 +38,3 @@ target_compile_definitions(Cam3dLib PRIVATE CAM3DLIB)
 add_executable(Cam3DTest cam3d_main.cpp)
 target_link_libraries(Cam3DTest Cam3dLib ${OpenCV_LIBS})
 target_compile_definitions(Cam3DTest PUBLIC GENICAM_USER_ACCEPTS_ANY_COMPILER)
-
