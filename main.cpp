@@ -23,7 +23,7 @@ int testFindBoardCorners() {
 
 void testCalibration() {
     // load image
-    cv::Mat image = cv::imread(R"(D:\Travail\Affaires\ARDPI\triangulation_2\data\Triangulation\Cam1.png)");
+    cv::Mat image = cv::imread(R"(D:\Travail\Affaires\ARDPI\triangulation_2\data\Triangulation\blender_test\board_view.png)");
     cv::Mat imageGray;
     cv::cvtColor(image, imageGray, cv::COLOR_BGR2GRAY);
 

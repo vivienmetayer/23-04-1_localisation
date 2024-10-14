@@ -1,27 +1,22 @@
 #include "triangulation.h"
 
-double distance_squared_2d(cv::Point2f p1, cv::Point2f p2)
-{
+double distance_squared_2d(cv::Point2f p1, cv::Point2f p2) {
     return (p1.x - p2.x) * (p1.x - p2.x) + 3 * (p1.y - p2.y) * (p1.y - p2.y);
 }
 
-double distance_squared_3d(cv::Point3f p1, cv::Point3f p2)
-{
+double distance_squared_3d(cv::Point3f p1, cv::Point3f p2) {
     return (p1.x - p2.x) * (p1.x - p2.x) + (p1.y - p2.y) * (p1.y - p2.y) + (p1.z - p2.z) * (p1.z - p2.z);
 }
 
-double scalarProduct(cv::Point2f p1, cv::Point2f p2)
-{
+double scalarProduct(cv::Point2f p1, cv::Point2f p2) {
     return p1.x * p2.x + p1.y * p2.y;
 }
 
-double norm(cv::Point2f p)
-{
+double norm(cv::Point2f p) {
     return std::sqrt(p.x * p.x + p.y * p.y);
 }
 
-bool Aligned(std::vector<cv::Point3f>& points)
-{
+bool Aligned(std::vector<cv::Point3f> &points) {
     cv::Point3f AB = points[1] - points[0];
     cv::Point3f AC = points[2] - points[0];
     AB = (1 / norm(AB)) * AB;
@@ -29,8 +24,7 @@ bool Aligned(std::vector<cv::Point3f>& points)
     return abs(AB.x * AC.x + AB.y * AC.y) > 0.75;
 }
 
-std::vector<double> getBarycentricCoordinates(cv::Point2f p, std::vector<cv::Point2f>& points)
-{
+std::vector<double> getBarycentricCoordinates(cv::Point2f p, std::vector<cv::Point2f> &points) {
     // double xa = points[0].x;
     // double xb = points[1].x;
     // double xc = points[2].x;
@@ -58,17 +52,16 @@ std::vector<double> getBarycentricCoordinates(cv::Point2f p, std::vector<cv::Poi
 
     double w2 = 1 - w0 - w1;
 
-    return { w0, w1, w2 };
+    return {w0, w1, w2};
 }
 
-cv::Point3f applyBarycentricCoords(std::vector<double>& coords, std::vector<cv::Point3f>& points)
-{
-//    cv::Point3f result{ 0,0,0 };
-//    double sum = coords[0] + coords[1] + coords[2];
-//    result += coords[0] / sum * (points[0]);
-//    result += coords[1] / sum * (points[1]);
-//    result += coords[2] / sum * (points[2]);
-//    return result;
+cv::Point3f applyBarycentricCoords(std::vector<double> &coords, std::vector<cv::Point3f> &points) {
+    //    cv::Point3f result{ 0,0,0 };
+    //    double sum = coords[0] + coords[1] + coords[2];
+    //    result += coords[0] / sum * (points[0]);
+    //    result += coords[1] / sum * (points[1]);
+    //    result += coords[2] / sum * (points[2]);
+    //    return result;
 
     cv::Point3f result = points[0];
     double sum = coords[0] + coords[1] + coords[2];
@@ -79,8 +72,7 @@ cv::Point3f applyBarycentricCoords(std::vector<double>& coords, std::vector<cv::
 
 int findBoardCorners(unsigned char *imagePtr, int width, int height, int lineWidth,
                      int boardWidth, int boardHeight, float squareLength, float markerLength,
-                     double *corners, double *objectPoints, int *ids, bool drawMarkers)
-{
+                     double *corners, double *objectPoints, int *ids, bool drawMarkers) {
     // get image from LabVIEW pointer
     cv::Mat image(cv::Size(width, height), CV_8UC1, imagePtr, lineWidth);
 
@@ -91,9 +83,9 @@ int findBoardCorners(unsigned char *imagePtr, int width, int height, int lineWid
 
     // find corners
     std::vector<int> markerIds;
-    std::vector <std::vector<cv::Point2f>> markerCorners;
+    std::vector<std::vector<cv::Point2f> > markerCorners;
     std::vector<int> charucoIds;
-    std::vector <cv::Point2f> charucoCorners;
+    std::vector<cv::Point2f> charucoCorners;
     cv::aruco::CharucoDetector charucoDetector(board);
     cv::aruco::CharucoParameters charucoParams;
     charucoParams.minMarkers = 1;
@@ -101,23 +93,20 @@ int findBoardCorners(unsigned char *imagePtr, int width, int height, int lineWid
     charucoDetector.detectBoard(image, charucoCorners, charucoIds, markerCorners, markerIds);
 
     // export corners
-    for (int i = 0; i < charucoCorners.size(); i++)
-    {
+    for (int i = 0; i < charucoCorners.size(); i++) {
         corners[2 * i] = charucoCorners[i].x;
         corners[2 * i + 1] = charucoCorners[i].y;
     }
 
     // export object points
-    for (int i = 0; i < charucoIds.size(); i++)
-    {
+    for (int i = 0; i < charucoIds.size(); i++) {
         objectPoints[3 * i] = board.getChessboardCorners()[charucoIds[i]].x;
         objectPoints[3 * i + 1] = board.getChessboardCorners()[charucoIds[i]].y;
         objectPoints[3 * i + 2] = 0;
     }
 
     // export ids
-    for (int i = 0; i < charucoIds.size(); i++)
-    {
+    for (int i = 0; i < charucoIds.size(); i++) {
         ids[i] = charucoIds[i];
     }
 
@@ -128,7 +117,7 @@ int findBoardCorners(unsigned char *imagePtr, int width, int height, int lineWid
     return (int) charucoCorners.size();
 }
 
-bool isPointInTriangle(const cv::Point2f& p, const std::vector<cv::Point2f>& triangle) {
+bool isPointInTriangle(const cv::Point2f &p, const std::vector<cv::Point2f> &triangle) {
     auto sign = [](const cv::Point2f p1, const cv::Point2f p2, const cv::Point2f p3) {
         return (p1.x - p3.x) * (p2.y - p3.y) - (p2.x - p3.x) * (p1.y - p3.y);
     };
@@ -141,14 +130,13 @@ bool isPointInTriangle(const cv::Point2f& p, const std::vector<cv::Point2f>& tri
 }
 
 bool searchClosestPoints(cv::Point2f point,
-                         const std::vector<cv::Point2f>& corners,
-                         const std::vector<cv::Point3f>& objectPoints,
-                         std::vector<int>& indices)
-{
-    int size = (int)corners.size();
+                         const std::vector<cv::Point2f> &corners,
+                         const std::vector<cv::Point3f> &objectPoints,
+                         std::vector<int> &indices) {
+    int size = (int) corners.size();
     if (size < 3) return false;
     indices = {};
-    std::vector<std::pair<double, int>> distances_indices(size);
+    std::vector<std::pair<double, int> > distances_indices(size);
 
     //store distance / indices pairs calculated from point and corners
     for (int i = 0; i < size; ++i) {
@@ -156,7 +144,7 @@ bool searchClosestPoints(cv::Point2f point,
     }
     // sort by distance
     std::sort(distances_indices.begin(), distances_indices.end(),
-              [](std::pair<double, int> &d1, std::pair<double, int>& d2) {return d1.first < d2.first; });
+              [](std::pair<double, int> &d1, std::pair<double, int> &d2) { return d1.first < d2.first; });
 
     // get first three points
     indices.push_back(distances_indices[0].second);
@@ -170,7 +158,7 @@ bool searchClosestPoints(cv::Point2f point,
     baryPoints[1] = objectPoints[indices[1]];
     baryPoints[2] = objectPoints[indices[2]];
 
-    while(Aligned(baryPoints)) {
+    while (Aligned(baryPoints)) {
         if (i++ == size) return false;
         indices.pop_back();
         indices.push_back(distances_indices[i].second);
@@ -181,28 +169,31 @@ bool searchClosestPoints(cv::Point2f point,
     return true;
 }
 
-void calibrate(double* corners, double* corners3D, int numCorners, int width, int height, const char* calib_filename)
-{
+void calibrate(double *corners, double *corners3D, int numCorners, int width, int height, const char *calib_filename) {
     std::vector<cv::Point2f> m_corners(numCorners);
     for (int i = 0; i < numCorners; ++i) {
-        m_corners[i] = cv::Point2f{ (float) corners[2 * i], (float) corners[2 * i + 1] };
+        m_corners[i] = cv::Point2f{(float) corners[2 * i], (float) corners[2 * i + 1]};
     }
     std::vector<cv::Point3f> m_corners3D(numCorners);
     for (int i = 0; i < numCorners; ++i) {
-        m_corners3D[i] = cv::Point3f{ (float) corners3D[3 * i], (float) corners3D[3 * i + 1], (float) corners3D[3 * i + 2] };
+        m_corners3D[i] = cv::Point3f{
+            (float) corners3D[3 * i], (float) corners3D[3 * i + 1], (float) corners3D[3 * i + 2]
+        };
     }
 
     cv::Mat calib_image(height, width, CV_32FC3);
     for (int i = 0; i < height; ++i) {
         for (int j = 0; j < width; ++j) {
-            cv::Point2f p{ (float) j, (float) i };
+            cv::Point2f p{(float) j, (float) i};
             std::vector<int> indices;
             searchClosestPoints(p, m_corners, m_corners3D, indices);
 
-            std::vector<cv::Point2f> points{ m_corners[indices[0]], m_corners[indices[1]], m_corners[indices[2]] };
+            std::vector<cv::Point2f> points{m_corners[indices[0]], m_corners[indices[1]], m_corners[indices[2]]};
             std::vector<double> barycentricCoords = getBarycentricCoordinates(p, points);
 
-            std::vector<cv::Point3f> points3D{ m_corners3D[indices[0]], m_corners3D[indices[1]], m_corners3D[indices[2]] };
+            std::vector<cv::Point3f> points3D{
+                m_corners3D[indices[0]], m_corners3D[indices[1]], m_corners3D[indices[2]]
+            };
             cv::Point3f result = applyBarycentricCoords(barycentricCoords, points3D);
 
             calib_image.at<cv::Vec3f>(i * width + j) = cv::Vec3f(result.x, result.y, result.z);
@@ -211,8 +202,7 @@ void calibrate(double* corners, double* corners3D, int numCorners, int width, in
     cv::imwrite(calib_filename, calib_image);
 }
 
-void readCalibrationImage(const char* calib_image_path, float* map2D)
-{
+void readCalibrationImage(const char *calib_image_path, float *map2D) {
     cv::Mat image = cv::imread(calib_image_path, cv::IMREAD_UNCHANGED);
 
     for (int i = 0; i < image.rows; ++i) {
@@ -225,27 +215,24 @@ void readCalibrationImage(const char* calib_image_path, float* map2D)
 }
 
 double calibrateCamera(double *corners, int *ids, const int *markersPerFrame, int numFrames,
-                       int boardWidth, int boardHeight, double *cameraMatrix, double *distCoeffs)
-{
+                       int boardWidth, int boardHeight, double *cameraMatrix, double *distCoeffs) {
     // create board
     cv::aruco::Dictionary dictionary = cv::aruco::getPredefinedDictionary(cv::aruco::DICT_4X4_250);
     cv::Size boardSize(boardWidth, boardHeight);
-    cv::Ptr <cv::aruco::CharucoBoard> board = cv::makePtr<cv::aruco::CharucoBoard>(boardSize, 95, 74, dictionary);
+    cv::Ptr<cv::aruco::CharucoBoard> board = cv::makePtr<cv::aruco::CharucoBoard>(boardSize, 95, 74, dictionary);
 
     // create vectors
-    std::vector<std::vector<cv::Point2f>> allCorners;
-    std::vector<std::vector<int>> allIds;
-    std::vector <cv::Point3f> allObjectPoints;
+    std::vector<std::vector<cv::Point2f> > allCorners;
+    std::vector<std::vector<int> > allIds;
+    std::vector<cv::Point3f> allObjectPoints;
 
     // fill vectors
     int offset = 0;
-    for (int i = 0; i < numFrames; i++)
-    {
+    for (int i = 0; i < numFrames; i++) {
         std::vector<int> frameIds;
-        std::vector <cv::Point2f> frameCorners;
-        std::vector <cv::Point3f> frameObjectPoints;
-        for (int j = 0; j < markersPerFrame[i]; j++)
-        {
+        std::vector<cv::Point2f> frameCorners;
+        std::vector<cv::Point3f> frameObjectPoints;
+        for (int j = 0; j < markersPerFrame[i]; j++) {
             frameCorners.emplace_back(corners[2 * (j + offset)],
                                       corners[2 * (j + offset) + 1]);
             frameIds.push_back(ids[j + offset]);
@@ -260,29 +247,28 @@ double calibrateCamera(double *corners, int *ids, const int *markersPerFrame, in
     cv::Mat cameraMatrixMat(3, 3, CV_64F, cameraMatrix);
     cv::Mat distCoeffsMat(1, 5, CV_64F, distCoeffs);
     double error = cv::aruco::calibrateCameraCharuco(
-            allCorners, allIds, board,
-            cv::Size(2592, 1942),
-            cameraMatrixMat, distCoeffsMat);
-//    double error = cv::aruco::calibrateCameraAruco(
-//            allCorners, allIds, allMarkersPerFrame, board,
-//            cv::Size(2592, 1942), cameraMatrixMat, distCoeffsMat);
+        allCorners, allIds, board,
+        cv::Size(2592, 1942),
+        cameraMatrixMat, distCoeffsMat);
+    //    double error = cv::aruco::calibrateCameraAruco(
+    //            allCorners, allIds, allMarkersPerFrame, board,
+    //            cv::Size(2592, 1942), cameraMatrixMat, distCoeffsMat);
 
     // fill camera matrix
-    for (int i = 0; i < 9; ++i)
-    {
+    for (int i = 0; i < 9; ++i) {
         cameraMatrix[i] = cameraMatrixMat.at<double>(i);
     }
 
     // fill distortion coefficients
-    for (int i = 0; i < 5; ++i)
-    {
+    for (int i = 0; i < 5; ++i) {
         distCoeffs[i] = distCoeffsMat.at<double>(i);
     }
 
     return error;
 }
 
-void undistort(unsigned char *imagePtr, int width, int height, int lineWidth, double *cameraMatrix, double *distCoeffs) {
+void undistort(unsigned char *imagePtr, int width, int height, int lineWidth, double *cameraMatrix,
+               double *distCoeffs) {
     cv::Mat image(height, width, CV_8UC1, imagePtr, lineWidth);
     cv::Mat imageUndistorted;
     cv::Mat cameraMatrixMat(3, 3, CV_64F, cameraMatrix);
@@ -297,7 +283,7 @@ int detectMarkers(unsigned char *imagePtr, int width, int height, int lineWidth,
     cv::aruco::Dictionary dictionary = cv::aruco::getPredefinedDictionary(cv::aruco::DICT_4X4_50);
 
     cv::aruco::ArucoDetector detector(dictionary);
-    std::vector<std::vector<cv::Point2f>> markerCorners;
+    std::vector<std::vector<cv::Point2f> > markerCorners;
     std::vector<int> markerIds;
     detector.detectMarkers(image, markerCorners, markerIds);
 
@@ -314,8 +300,8 @@ int detectMarkers(unsigned char *imagePtr, int width, int height, int lineWidth,
 
     // draw markers
     if (drawMarkers) {
-        std::vector<std::vector<cv::Point2f>> markersToDraw;
-        std::vector<int>idsToDraw;
+        std::vector<std::vector<cv::Point2f> > markersToDraw;
+        std::vector<int> idsToDraw;
         markersToDraw.insert(markersToDraw.end(), markerCorners.begin(), markerCorners.begin() + size);
         idsToDraw.insert(idsToDraw.end(), markerIds.begin(), markerIds.begin() + size);
         cv::aruco::drawDetectedMarkers(image, markersToDraw, idsToDraw);
