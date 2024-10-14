@@ -191,6 +191,83 @@ void calibrate(const double *corners, const double *corners3D, int numCorners, i
     cv::imwrite(calib_filename, calib_image);
 }
 
+void calibrateByCalculus(const double *corners, const double *corners3D, int *ids, int numCorners, int width,
+                         int height, double *cameraMatrixValues, double *distCoeffs,
+                         int boardWidth, int boardHeight, const char *calib_filename) {
+    // get cam matrix and dist coeffs
+    cv::Mat cameraMatrix(3, 3, CV_64F, cameraMatrixValues);
+    cv::Mat distCoeffsMat(1, 5, CV_64F, distCoeffs);
+
+    // create board
+    cv::aruco::Dictionary dictionary = cv::aruco::getPredefinedDictionary(cv::aruco::DICT_4X4_250);
+    cv::Size boardSize(boardWidth, boardHeight);
+    cv::Ptr<cv::aruco::CharucoBoard> board = cv::makePtr<cv::aruco::CharucoBoard>(boardSize, 95, 74, dictionary);
+
+    // create vectors
+    std::vector<cv::Point2f> allCorners;
+    std::vector<int> allIds;
+    std::vector<cv::Point3f> allObjectPoints;
+
+    for (int i = 0; i < numCorners; i++) {
+        allCorners.emplace_back(corners[2 * i], corners[2 * i + 1]);
+        allIds.push_back(ids[i]);
+        allObjectPoints.emplace_back(static_cast<float>(corners3D[3 * i]),
+                                     static_cast<float>(corners3D[3 * i + 1]),
+                                     static_cast<float>(corners3D[3 * i + 2]));
+    }
+
+    // compute board position
+    cv::Mat rvec, tvec;
+    cv::aruco::estimatePoseCharucoBoard(allCorners, allIds, board, cameraMatrix, distCoeffsMat, rvec, tvec);
+
+    // print board position
+    std::cout << "rvec: " << rvec << std::endl;
+    std::cout << "tvec: " << tvec << std::endl;
+
+    // for each pixel in the image, compute the 3D position by casting a ray from the camera to the board plane
+    cv::Mat calib_image(height, width, CV_32FC3);
+    for (int i = 0; i < height; ++i) {
+        for (int j = 0; j < width; ++j) {
+            cv::Point2f p{static_cast<float>(j), static_cast<float>(i)};
+            cv::Mat ray = cv::Mat(3, 1, CV_64F);
+
+            // Calcul du rayon dans le repère de la caméra (non-normalisé)
+            ray.at<double>(0) = (p.x - cameraMatrix.at<double>(0, 2)) / cameraMatrix.at<double>(0, 0);
+            ray.at<double>(1) = (p.y - cameraMatrix.at<double>(1, 2)) / cameraMatrix.at<double>(1, 1);
+            ray.at<double>(2) = 1;
+
+            // Appliquer la rotation inverse et la translation inverse pour passer au repère monde
+
+            cv::Mat R, R_inv;
+            cv::Rodrigues(rvec, R);  // Convertir rvec en matrice de rotation
+            R_inv = R.t();  // Inverser la rotation (matrice transposée)
+
+            // Inverser la translation en passant de la mire vers la caméra
+            cv::Mat t_inv = -R_inv * tvec;  // Inverser la translation
+
+            // Calculer le rayon dans le repère monde
+            cv::Mat rayWorld = R_inv * ray;  // Appliquer la rotation inverse au rayon
+
+            // Définir le plan de la mire en Z = 0 (plan de la mire dans le repère monde)
+            double scale = -t_inv.at<double>(2) / rayWorld.at<double>(2);  // Échelle pour intercepter le plan Z = 0
+            cv::Mat intersection = t_inv + scale * rayWorld;  // Intersection du rayon avec le plan Z = 0
+
+            // Stocker les coordonnées du point dans l'image calibrée
+            cv::Point3f result{
+                static_cast<float>(intersection.at<double>(0)),
+                static_cast<float>(intersection.at<double>(1)),
+                static_cast<float>(intersection.at<double>(2))
+            };
+
+            // Stocker la position dans calib_image
+            calib_image.at<cv::Vec3f>(i * width + j) = cv::Vec3f(result.x, result.y, result.z);
+
+        }
+    }
+
+    cv::imwrite(calib_filename, calib_image);
+}
+
 void readCalibrationImage(const char *calib_image_path, float *map2D) {
     cv::Mat image = cv::imread(calib_image_path, cv::IMREAD_UNCHANGED);
 

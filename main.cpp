@@ -60,6 +60,37 @@ void testCalibration() {
               R"(D:\Travail\Affaires\ARDPI\triangulation_2\dev\python\TriangulationTest\calib.exr)");
 }
 
+void testCalibrationByCalculus() {
+    // load image
+    cv::Mat image = cv::imread(
+        R"(D:\Travail\Affaires\ARDPI\triangulation_2\data\Triangulation\blender_test\board_view.png)");
+    cv::Mat imageGray;
+    cv::cvtColor(image, imageGray, cv::COLOR_BGR2GRAY);
+
+    // find board corners
+    int boardWidth = 14;
+    int boardHeight = 9;
+    std::vector<double> cornersArray(2 * boardWidth * boardHeight);
+    std::vector<double> objectPointsArray(3 * boardWidth * boardHeight);
+    std::vector<int> ids(boardWidth * boardHeight);
+    int n = findBoardCorners(imageGray.data, imageGray.cols, imageGray.rows, (int) imageGray.step,
+                             boardWidth, boardHeight, 17, 13,
+                             cornersArray.data(), objectPointsArray.data(), ids.data(), true);
+
+    // calibrate by calculus
+    double cameraMatrix[9];
+    double distCoeffs[5];
+    cameraMatrix[0] = 426.0;
+    cameraMatrix[4] = 426.0;
+    cameraMatrix[2] = image.size().width / 2.0;
+    cameraMatrix[5] = image.size().height / 2.0;
+    cameraMatrix[8] = 1.0;
+    calibrateByCalculus(cornersArray.data(), objectPointsArray.data(), ids.data(), n, imageGray.cols, imageGray.rows,
+                        cameraMatrix, distCoeffs, boardWidth, boardHeight,
+                        R"(D:\Travail\Affaires\ARDPI\triangulation_2\dev\python\TriangulationTest\calib.exr)");
+
+}
+
 void testfindMmarkers() {
     // load test image
     cv::Mat image = cv::imread(
@@ -113,6 +144,6 @@ void printBoard() {
 }
 
 int main() {
-    testCalibration();
+    testCalibrationByCalculus();
     return 0;
 }

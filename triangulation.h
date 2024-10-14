@@ -13,6 +13,10 @@ DLL_EXPORT int findBoardCorners(unsigned char *imagePtr, int width, int height, 
 DLL_EXPORT void calibrate(const double* corners, const double* corners3D, int numCorners,
                           int width, int height, const char* calib_filename);
 
+DLL_EXPORT void calibrateByCalculus(const double *corners, const double *corners3D, int *ids, int numCorners, int width,
+                                    int height, double *cameraMatrixValues, double *distCoeffs,
+                                    int boardWidth, int boardHeight, const char *calib_filename);
+
 DLL_EXPORT void readCalibrationImage(const char* calib_image_path, float* map2D);
 
 DLL_EXPORT double calibrateCamera(double *corners, int *ids, const int *markersPerFrame, int numFrames,
