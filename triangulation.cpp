@@ -1,22 +1,22 @@
 #include "triangulation.h"
 
-double distance_squared_2d(cv::Point2f p1, cv::Point2f p2) {
+double distance_squared_2d(const cv::Point2f &p1, const cv::Point2f &p2) {
     return (p1.x - p2.x) * (p1.x - p2.x) + 3 * (p1.y - p2.y) * (p1.y - p2.y);
 }
 
-double distance_squared_3d(cv::Point3f p1, cv::Point3f p2) {
+double distance_squared_3d(const cv::Point3f &p1, const cv::Point3f &p2) {
     return (p1.x - p2.x) * (p1.x - p2.x) + (p1.y - p2.y) * (p1.y - p2.y) + (p1.z - p2.z) * (p1.z - p2.z);
 }
 
-double scalarProduct(cv::Point2f p1, cv::Point2f p2) {
+double scalarProduct(const cv::Point2f &p1, const cv::Point2f &p2) {
     return p1.x * p2.x + p1.y * p2.y;
 }
 
-double norm(cv::Point2f p) {
+double norm(const cv::Point2f &p) {
     return std::sqrt(p.x * p.x + p.y * p.y);
 }
 
-bool Aligned(std::vector<cv::Point3f> &points) {
+bool Aligned(const std::vector<cv::Point3f> &points) {
     cv::Point3f AB = points[1] - points[0];
     cv::Point3f AC = points[2] - points[0];
     AB = (1 / norm(AB)) * AB;
@@ -24,23 +24,7 @@ bool Aligned(std::vector<cv::Point3f> &points) {
     return abs(AB.x * AC.x + AB.y * AC.y) > 0.75;
 }
 
-std::vector<double> getBarycentricCoordinates(cv::Point2f p, std::vector<cv::Point2f> &points) {
-    // double xa = points[0].x;
-    // double xb = points[1].x;
-    // double xc = points[2].x;
-    // double xp = p.x;
-    //
-    // double ya = points[0].y;
-    // double yb = points[1].y;
-    // double yc = points[2].y;
-    // double yp = p.y;
-    //
-    // double v_num = yp - ya - (yb - ya) * (xp - xa) / (xb - xa);
-    // double v_den = yc - ya - (xc - xa) * (yb - ya) / (xb - xa);
-    // double v = v_num / v_den;
-    //
-    // double u = (xp - xa) / (xb - xa) - v * (xc - xa) / (xb - xa);
-    // return { 1 - u - v, u, v };
+std::vector<double> getBarycentricCoordinates(const cv::Point2f &p, const std::vector<cv::Point2f> &points) {
     double area = (points[1].y - points[2].y) * (points[0].x - points[2].x) +
                   (points[2].x - points[1].x) * (points[0].y - points[2].y);
 
@@ -55,7 +39,7 @@ std::vector<double> getBarycentricCoordinates(cv::Point2f p, std::vector<cv::Poi
     return {w0, w1, w2};
 }
 
-cv::Point3f applyBarycentricCoords(std::vector<double> &coords, std::vector<cv::Point3f> &points) {
+cv::Point3f applyBarycentricCoords(const std::vector<double> &coords, const std::vector<cv::Point3f> &points) {
     //    cv::Point3f result{ 0,0,0 };
     //    double sum = coords[0] + coords[1] + coords[2];
     //    result += coords[0] / sum * (points[0]);
@@ -114,7 +98,7 @@ int findBoardCorners(unsigned char *imagePtr, int width, int height, int lineWid
     if (drawMarkers)
         cv::aruco::drawDetectedCornersCharuco(image, charucoCorners, charucoIds);
 
-    return (int) charucoCorners.size();
+    return static_cast<int>(charucoCorners.size());
 }
 
 bool isPointInTriangle(const cv::Point2f &p, const std::vector<cv::Point2f> &triangle) {
@@ -133,7 +117,7 @@ bool searchClosestPoints(cv::Point2f point,
                          const std::vector<cv::Point2f> &corners,
                          const std::vector<cv::Point3f> &objectPoints,
                          std::vector<int> &indices) {
-    int size = (int) corners.size();
+    int size = static_cast<int>(corners.size());
     if (size < 3) return false;
     indices = {};
     std::vector<std::pair<double, int> > distances_indices(size);
@@ -143,8 +127,10 @@ bool searchClosestPoints(cv::Point2f point,
         distances_indices[i] = std::pair<double, int>(distance_squared_2d(point, corners[i]), i);
     }
     // sort by distance
-    std::sort(distances_indices.begin(), distances_indices.end(),
-              [](std::pair<double, int> &d1, std::pair<double, int> &d2) { return d1.first < d2.first; });
+    std::ranges::sort(distances_indices,
+                      [](const std::pair<double, int> &d1, const std::pair<double, int> &d2) {
+                          return d1.first < d2.first;
+                      });
 
     // get first three points
     indices.push_back(distances_indices[0].second);
@@ -169,22 +155,25 @@ bool searchClosestPoints(cv::Point2f point,
     return true;
 }
 
-void calibrate(double *corners, double *corners3D, int numCorners, int width, int height, const char *calib_filename) {
+void calibrate(const double *corners, const double *corners3D, int numCorners, int width, int height,
+               const char *calib_filename) {
     std::vector<cv::Point2f> m_corners(numCorners);
     for (int i = 0; i < numCorners; ++i) {
-        m_corners[i] = cv::Point2f{(float) corners[2 * i], (float) corners[2 * i + 1]};
+        m_corners[i] = cv::Point2f{static_cast<float>(corners[2 * i]), static_cast<float>(corners[2 * i + 1])};
     }
     std::vector<cv::Point3f> m_corners3D(numCorners);
     for (int i = 0; i < numCorners; ++i) {
         m_corners3D[i] = cv::Point3f{
-            (float) corners3D[3 * i], (float) corners3D[3 * i + 1], (float) corners3D[3 * i + 2]
+            static_cast<float>(corners3D[3 * i]),
+            static_cast<float>(corners3D[3 * i + 1]),
+            static_cast<float>(corners3D[3 * i + 2])
         };
     }
 
     cv::Mat calib_image(height, width, CV_32FC3);
     for (int i = 0; i < height; ++i) {
         for (int j = 0; j < width; ++j) {
-            cv::Point2f p{(float) j, (float) i};
+            cv::Point2f p{static_cast<float>(j), static_cast<float>(i)};
             std::vector<int> indices;
             searchClosestPoints(p, m_corners, m_corners3D, indices);
 
@@ -288,7 +277,7 @@ int detectMarkers(unsigned char *imagePtr, int width, int height, int lineWidth,
     detector.detectMarkers(image, markerCorners, markerIds);
 
     // output markers positions and ids
-    int size = std::min(maxMarkers, (int) markerIds.size());
+    int size = std::min(maxMarkers, static_cast<int>(markerIds.size()));
     for (int i = 0; i < size; ++i) {
         ids[i] = markerIds[i];
         for (int j = 0; j < 4; ++j) {
