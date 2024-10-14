@@ -23,7 +23,8 @@ int testFindBoardCorners() {
 
 void testCalibration() {
     // load image
-    cv::Mat image = cv::imread(R"(D:\Travail\Affaires\ARDPI\triangulation_2\data\Triangulation\blender_test\board_view.png)");
+    cv::Mat image = cv::imread(
+        R"(D:\Travail\Affaires\ARDPI\triangulation_2\data\Triangulation\blender_test\board_view.png)");
     cv::Mat imageGray;
     cv::cvtColor(image, imageGray, cv::COLOR_BGR2GRAY);
 
@@ -42,17 +43,16 @@ void testCalibration() {
     // turn into vectors of points
     std::vector<cv::Point2f> corners;
     std::vector<cv::Point3f> objectPoints;
-    for (int i = 0; i < n; ++i)
-    {
+    for (int i = 0; i < n; ++i) {
         corners.emplace_back(cornersArray[2 * i], cornersArray[2 * i + 1]);
         objectPoints.emplace_back(objectPointsArray[3 * i], objectPointsArray[3 * i + 1], objectPointsArray[3 * i + 2]);
     }
 
     // draw corners
-//    cv::aruco::drawDetectedCornersCharuco(image, corners, ids);
-//    cv::namedWindow("corners", cv::WINDOW_NORMAL);
-//    cv::imshow("corners", image);
-//    cv::waitKey(0);
+    //    cv::aruco::drawDetectedCornersCharuco(image, corners, ids);
+    //    cv::namedWindow("corners", cv::WINDOW_NORMAL);
+    //    cv::imshow("corners", image);
+    //    cv::waitKey(0);
 
     // calibrate
     calibrate(cornersArray.data(), objectPointsArray.data(),
@@ -62,7 +62,8 @@ void testCalibration() {
 
 void testfindMmarkers() {
     // load test image
-    cv::Mat image = cv::imread(R"(C:\Travail\Clients\ARDPI\23-02-1 Controle de position emetteur recepteur\dev\dodecaruco\images\calibration\cam1\image0.jpg)");
+    cv::Mat image = cv::imread(
+        R"(C:\Travail\Clients\ARDPI\23-02-1 Controle de position emetteur recepteur\dev\dodecaruco\images\calibration\cam1\image0.jpg)");
     cv::Mat imageGray;
     cv::cvtColor(image, imageGray, cv::COLOR_BGR2GRAY);
     std::cout << "image loaded" << std::endl;
@@ -79,12 +80,10 @@ void testfindMmarkers() {
     cornersArray.resize(2 * 4 * numMarkers);
 
     // draw markers
-    std::vector<std::vector<cv::Point2f>> corners;
-    for (int i = 0; i < numMarkers; ++i)
-    {
+    std::vector<std::vector<cv::Point2f> > corners;
+    for (int i = 0; i < numMarkers; ++i) {
         std::vector<cv::Point2f> markerCorners;
-        for (int j = 0; j < 4; ++j)
-        {
+        for (int j = 0; j < 4; ++j) {
             markerCorners.emplace_back(cornersArray[2 * (4 * i + j)], cornersArray[2 * (4 * i + j) + 1]);
         }
         corners.push_back(markerCorners);
@@ -113,8 +112,7 @@ void printBoard() {
     cv::imwrite(R"(D:\Travail\Affaires\ARDPI\triangulation_2\data\Triangulation\board.png)", boardImage);
 }
 
-int main()
-{
+int main() {
     testCalibration();
     return 0;
 }
