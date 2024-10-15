@@ -231,40 +231,31 @@ void calibrateByCalculus(const double *corners, const double *corners3D, int *id
             cv::Point2f p{static_cast<float>(j), static_cast<float>(i)};
             cv::Mat ray = cv::Mat(3, 1, CV_64F);
 
-            // Calcul du rayon dans le repère de la caméra (non-normalisé)
+            // Compute ray in camera system
             ray.at<double>(0) = (p.x - cameraMatrix.at<double>(0, 2)) / cameraMatrix.at<double>(0, 0);
             ray.at<double>(1) = (p.y - cameraMatrix.at<double>(1, 2)) / cameraMatrix.at<double>(1, 1);
             ray.at<double>(2) = 1;
 
-            // Appliquer la rotation inverse et la translation inverse pour passer au repère monde
-
+            // Apply inverse transform to get to world system
             cv::Mat R, R_inv;
-            cv::Rodrigues(rvec, R);  // Convertir rvec en matrice de rotation
-            R_inv = R.t();  // Inverser la rotation (matrice transposée)
+            cv::Rodrigues(rvec, R);
+            R_inv = R.t();
+            cv::Mat t_inv = -R_inv * tvec;
+            cv::Mat rayWorld = R_inv * ray;
 
-            // Inverser la translation en passant de la mire vers la caméra
-            cv::Mat t_inv = -R_inv * tvec;  // Inverser la translation
-
-            // Calculer le rayon dans le repère monde
-            cv::Mat rayWorld = R_inv * ray;  // Appliquer la rotation inverse au rayon
-
-            // Définir le plan de la mire en Z = 0 (plan de la mire dans le repère monde)
-            double scale = -t_inv.at<double>(2) / rayWorld.at<double>(2);  // Échelle pour intercepter le plan Z = 0
-            cv::Mat intersection = t_inv + scale * rayWorld;  // Intersection du rayon avec le plan Z = 0
-
-            // Stocker les coordonnées du point dans l'image calibrée
+            // define board plane Z = 0
+            double scale = -t_inv.at<double>(2) / rayWorld.at<double>(2); // scale to intercept z=0 plane
+            cv::Mat intersection = t_inv + scale * rayWorld;
             cv::Point3f result{
                 static_cast<float>(intersection.at<double>(0)),
                 static_cast<float>(intersection.at<double>(1)),
                 static_cast<float>(intersection.at<double>(2))
             };
 
-            // Stocker la position dans calib_image
+            // Store position in image
             calib_image.at<cv::Vec3f>(i * width + j) = cv::Vec3f(result.x, result.y, result.z);
-
         }
     }
-
     cv::imwrite(calib_filename, calib_image);
 }
 
