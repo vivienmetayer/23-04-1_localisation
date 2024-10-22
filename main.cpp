@@ -10,7 +10,7 @@ int testFindBoardCorners() {
     std::vector<double> objectPointsArray(3 * 11 * 11);
     std::vector<int> ids(11 * 11);
     int n = findBoardCorners(imageGray.data, imageGray.cols, imageGray.rows, (int) imageGray.step,
-                             6, 4, 40, 31,
+                             6, 4, 40, 31, cv::aruco::DICT_4X4_250,
                              cornersArray.data(), objectPointsArray.data(), ids.data(), true);
 
     // show image
@@ -35,7 +35,7 @@ void testCalibration() {
     std::vector<double> objectPointsArray(3 * boardWidth * boardHeight);
     std::vector<int> ids(boardWidth * boardHeight);
     int n = findBoardCorners(imageGray.data, imageGray.cols, imageGray.rows, (int) imageGray.step,
-                             boardWidth, boardHeight, 17, 13,
+                             boardWidth, boardHeight, 17, 13, cv::aruco::DICT_4X4_250,
                              cornersArray.data(), objectPointsArray.data(), ids.data(), true);
     std::cout << "Found " << n << " corners" << std::endl;
     ids.resize(n);
@@ -74,7 +74,7 @@ void testCalibrationByCalculus() {
     std::vector<double> objectPointsArray(3 * boardWidth * boardHeight);
     std::vector<int> ids(boardWidth * boardHeight);
     int n = findBoardCorners(imageGray.data, imageGray.cols, imageGray.rows, (int) imageGray.step,
-                             boardWidth, boardHeight, 17, 13,
+                             boardWidth, boardHeight, 17, 13, cv::aruco::DICT_4X4_250,
                              cornersArray.data(), objectPointsArray.data(), ids.data(), true);
 
     // calibrate by calculus
@@ -86,9 +86,46 @@ void testCalibrationByCalculus() {
     cameraMatrix[5] = image.size().height / 2.0;
     cameraMatrix[8] = 1.0;
     calibrateByCalculus(cornersArray.data(), objectPointsArray.data(), ids.data(), n, imageGray.cols, imageGray.rows,
-                        cameraMatrix, distCoeffs, boardWidth, boardHeight,
+                        cv::aruco::DICT_4X4_250, cameraMatrix, distCoeffs, boardWidth, boardHeight,
                         R"(D:\Travail\Affaires\ARDPI\triangulation_2\dev\python\TriangulationTest\calib.exr)");
 
+}
+
+void testRemap() {
+    std::vector<double> camMatrix;
+    std::vector<double> distCoeffs;
+
+    camMatrix.emplace_back(4590.0);
+    camMatrix.emplace_back(0.0);
+    camMatrix.emplace_back(2267);
+    camMatrix.emplace_back(0.0);
+    camMatrix.emplace_back(4590.0);
+    camMatrix.emplace_back(2267);
+    camMatrix.emplace_back(0.0);
+    camMatrix.emplace_back(0.0);
+    camMatrix.emplace_back(1.0);
+
+    distCoeffs.emplace_back(-0.146);
+    distCoeffs.emplace_back(0.132);
+    distCoeffs.emplace_back(-0.000294);
+    distCoeffs.emplace_back(-0.000213);
+    distCoeffs.emplace_back(-0.0943);
+
+    std::vector<float> mapX(4512 * 4512 * 2);
+    std::vector<float> mapY(4512 * 4512 * 2);
+    createUndistortMap(camMatrix.data(), distCoeffs.data(), 4512, 4512, mapX.data(), mapY.data());
+
+    cv::Mat image = cv::imread(R"(D:\Work\Clients\ARDPI\23-04-1_localisation\images\20241022093602.png)");
+
+    cv::namedWindow("original", cv::WINDOW_NORMAL);
+    cv::imshow("original", image);
+
+    cv::Mat imageUndistorted;
+    remap(image.data, image.cols, image.rows, (int) image.step, mapX.data(), mapY.data());
+
+    cv::namedWindow("undistorted", cv::WINDOW_NORMAL);
+    cv::imshow("undistorted", image);
+    cv::waitKey(0);
 }
 
 void testfindMmarkers() {
@@ -104,7 +141,7 @@ void testfindMmarkers() {
     int numMarkers;
     std::vector<double> cornersArray(2 * 4 * maxMarkers);
     std::vector<int> ids(maxMarkers);
-    detectMarkers(imageGray.data, imageGray.cols, imageGray.rows, (int) imageGray.step,
+    detectMarkers(imageGray.data, imageGray.cols, imageGray.rows, (int) imageGray.step,  cv::aruco::DICT_4X4_250,
                   cornersArray.data(), ids.data(), &numMarkers, maxMarkers, true);
     std::cout << "Found " << numMarkers << " markers" << std::endl;
     ids.resize(numMarkers);
@@ -144,6 +181,6 @@ void printBoard() {
 }
 
 int main() {
-    testCalibrationByCalculus();
+    testRemap();
     return 0;
 }

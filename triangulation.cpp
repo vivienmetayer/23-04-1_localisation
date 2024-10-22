@@ -55,13 +55,13 @@ cv::Point3f applyBarycentricCoords(const std::vector<double> &coords, const std:
 }
 
 int findBoardCorners(unsigned char *imagePtr, int width, int height, int lineWidth,
-                     int boardWidth, int boardHeight, float squareLength, float markerLength,
+                     int boardWidth, int boardHeight, float squareLength, float markerLength, int dictionaryId,
                      double *corners, double *objectPoints, int *ids, bool drawMarkers) {
     // get image from LabVIEW pointer
     cv::Mat image(cv::Size(width, height), CV_8UC1, imagePtr, lineWidth);
 
     // create board
-    cv::aruco::Dictionary dictionary = cv::aruco::getPredefinedDictionary(cv::aruco::DICT_4X4_250);
+    cv::aruco::Dictionary dictionary = cv::aruco::getPredefinedDictionary(dictionaryId);
     cv::Size boardSize(boardWidth, boardHeight);
     cv::aruco::CharucoBoard board(boardSize, squareLength, markerLength, dictionary);
 
@@ -192,14 +192,14 @@ void calibrate(const double *corners, const double *corners3D, int numCorners, i
 }
 
 void calibrateByCalculus(const double *corners, const double *corners3D, int *ids, int numCorners, int width,
-                         int height, double *cameraMatrixValues, double *distCoeffs,
+                         int height, int dict, double *cameraMatrixValues, double *distCoeffs,
                          int boardWidth, int boardHeight, const char *calib_filename) {
     // get cam matrix and dist coeffs
     cv::Mat cameraMatrix(3, 3, CV_64F, cameraMatrixValues);
     cv::Mat distCoeffsMat(1, 5, CV_64F, distCoeffs);
 
     // create board
-    cv::aruco::Dictionary dictionary = cv::aruco::getPredefinedDictionary(cv::aruco::DICT_4X4_250);
+    cv::aruco::Dictionary dictionary = cv::aruco::getPredefinedDictionary(dict);
     cv::Size boardSize(boardWidth, boardHeight);
     cv::Ptr<cv::aruco::CharucoBoard> board = cv::makePtr<cv::aruco::CharucoBoard>(boardSize, 95, 74, dictionary);
 
@@ -272,9 +272,9 @@ void readCalibrationImage(const char *calib_image_path, float *map2D) {
 }
 
 double calibrateCamera(double *corners, int *ids, const int *markersPerFrame, int numFrames,
-                       int boardWidth, int boardHeight, double *cameraMatrix, double *distCoeffs) {
+                       int boardWidth, int boardHeight, int dict, double *cameraMatrix, double *distCoeffs) {
     // create board
-    cv::aruco::Dictionary dictionary = cv::aruco::getPredefinedDictionary(cv::aruco::DICT_4X4_250);
+    cv::aruco::Dictionary dictionary = cv::aruco::getPredefinedDictionary(dict);
     cv::Size boardSize(boardWidth, boardHeight);
     cv::Ptr<cv::aruco::CharucoBoard> board = cv::makePtr<cv::aruco::CharucoBoard>(boardSize, 95, 74, dictionary);
 
@@ -334,10 +334,48 @@ void undistort(unsigned char *imagePtr, int width, int height, int lineWidth, do
     imageUndistorted.copyTo(image);
 }
 
-int detectMarkers(unsigned char *imagePtr, int width, int height, int lineWidth,
+void createUndistortMap(double *cameraMatrix, double *distCoeffs, int width, int height,
+                        float *mapDataX, float *mapDataY) {
+    auto t0 = std::chrono::high_resolution_clock::now();
+    cv::Mat cameraMatrixMat(3, 3, CV_64F, cameraMatrix);
+    cv::Mat distCoeffsMat(1, 5, CV_64F, distCoeffs);
+    cv::Mat map1;
+    cv::Mat map2;
+    cv::Mat R = cv::Mat::eye(3, 3, CV_64F);
+    cv::initUndistortRectifyMap(cameraMatrixMat, distCoeffsMat, R, cameraMatrixMat,
+                                cv::Size(width, height), CV_32FC1, map1, map2);
+
+    auto t1 = std::chrono::high_resolution_clock::now();
+    std::cout << "Time to create undistort map: "
+              << std::chrono::duration_cast<std::chrono::milliseconds>(t1 - t0).count()
+              << " milliseconds" << std::endl;
+
+    for (int i = 0; i < height; ++i) {
+        for (int j = 0; j < width; ++j) {
+            mapDataX[i * width + j] = map1.at<float>(i, j);
+            mapDataY[i * width + j] = map2.at<float>(i, j);
+        }
+    }
+
+    auto t2 = std::chrono::high_resolution_clock::now();
+    std::cout << "Time to copy undistort map: "
+              << std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count()
+              << " milliseconds" << std::endl;
+}
+
+void remap(unsigned char *imagePtr, int width, int height, int lineWidth, float *mapDataX, float* mapDataY) {
+    cv::Mat image(height, width, CV_8UC1, imagePtr, lineWidth);
+    cv::Mat imageUndistorted;
+    cv::Mat mapX(height, width, CV_32FC1, mapDataX);
+    cv::Mat mapY(height, width, CV_32FC1, mapDataY);
+    cv::remap(image, imageUndistorted, mapX, mapY, cv::INTER_LINEAR);
+    imageUndistorted.copyTo(image);
+}
+
+int detectMarkers(unsigned char *imagePtr, int width, int height, int lineWidth, int dict,
                   double *corners, int *ids, int *numMarkers, int maxMarkers, bool drawMarkers) {
     cv::Mat image(height, width, CV_8UC1, imagePtr, lineWidth);
-    cv::aruco::Dictionary dictionary = cv::aruco::getPredefinedDictionary(cv::aruco::DICT_4X4_50);
+    cv::aruco::Dictionary dictionary = cv::aruco::getPredefinedDictionary(dict);
 
     cv::aruco::ArucoDetector detector(dictionary);
     std::vector<std::vector<cv::Point2f> > markerCorners;
