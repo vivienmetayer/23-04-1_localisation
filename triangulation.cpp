@@ -272,11 +272,11 @@ void readCalibrationImage(const char *calib_image_path, float *map2D) {
 }
 
 double calibrateCamera(double *corners, int *ids, const int *markersPerFrame, int numFrames,
-                       int boardWidth, int boardHeight, int dict, double *cameraMatrix, double *distCoeffs) {
+                       int boardWidth, int boardHeight, float squareLength, float markerLength, int dict, double *cameraMatrix, double *distCoeffs) {
     // create board
     cv::aruco::Dictionary dictionary = cv::aruco::getPredefinedDictionary(dict);
     cv::Size boardSize(boardWidth, boardHeight);
-    cv::Ptr<cv::aruco::CharucoBoard> board = cv::makePtr<cv::aruco::CharucoBoard>(boardSize, 95, 74, dictionary);
+    cv::Ptr<cv::aruco::CharucoBoard> board = cv::makePtr<cv::aruco::CharucoBoard>(boardSize, squareLength, markerLength, dictionary);
 
     // create vectors
     std::vector<std::vector<cv::Point2f> > allCorners;

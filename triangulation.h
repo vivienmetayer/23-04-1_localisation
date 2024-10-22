@@ -20,7 +20,7 @@ DLL_EXPORT void calibrateByCalculus(const double *corners, const double *corners
 DLL_EXPORT void readCalibrationImage(const char* calib_image_path, float* map2D);
 
 DLL_EXPORT double calibrateCamera(double *corners, int *ids, const int *markersPerFrame, int numFrames,
-                       int boardWidth, int boardHeight, int dict, double *cameraMatrix, double *distCoeffs);
+                       int boardWidth, int boardHeight, float squareLength, float markerLength, int dict, double *cameraMatrix, double *distCoeffs);
 
 DLL_EXPORT int detectMarkers(unsigned char *imagePtr, int width, int height, int lineWidth, int dict,
                              double *corners, int *ids, int *numMarkers, int maxMarkers, bool drawMarkers);
