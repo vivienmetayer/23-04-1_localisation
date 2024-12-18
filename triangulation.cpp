@@ -193,7 +193,8 @@ void calibrate(const double *corners, const double *corners3D, int numCorners, i
 
 void calibrateByCalculus(const double *corners, const double *corners3D, int *ids, int numCorners, int width,
                          int height, int dict, double *cameraMatrixValues, double *distCoeffs,
-                         int boardWidth, int boardHeight, const char *calib_filename) {
+                         int boardWidth, int boardHeight, double squareLength, double markerLength,
+                         const char *calib_filename) {
     // get cam matrix and dist coeffs
     cv::Mat cameraMatrix(3, 3, CV_64F, cameraMatrixValues);
     cv::Mat distCoeffsMat(1, 5, CV_64F, distCoeffs);
@@ -201,7 +202,7 @@ void calibrateByCalculus(const double *corners, const double *corners3D, int *id
     // create board
     cv::aruco::Dictionary dictionary = cv::aruco::getPredefinedDictionary(dict);
     cv::Size boardSize(boardWidth, boardHeight);
-    cv::Ptr<cv::aruco::CharucoBoard> board = cv::makePtr<cv::aruco::CharucoBoard>(boardSize, 95, 74, dictionary);
+    cv::Ptr<cv::aruco::CharucoBoard> board = cv::makePtr<cv::aruco::CharucoBoard>(boardSize, squareLength, markerLength, dictionary);
 
     // create vectors
     std::vector<cv::Point2f> allCorners;
@@ -220,16 +221,12 @@ void calibrateByCalculus(const double *corners, const double *corners3D, int *id
     cv::Mat rvec, tvec;
     cv::aruco::estimatePoseCharucoBoard(allCorners, allIds, board, cameraMatrix, distCoeffsMat, rvec, tvec);
 
-    // print board position
-    std::cout << "rvec: " << rvec << std::endl;
-    std::cout << "tvec: " << tvec << std::endl;
-
     // for each pixel in the image, compute the 3D position by casting a ray from the camera to the board plane
     cv::Mat calib_image(height, width, CV_32FC3);
     for (int i = 0; i < height; ++i) {
         for (int j = 0; j < width; ++j) {
             cv::Point2f p{static_cast<float>(j), static_cast<float>(i)};
-            cv::Mat ray = cv::Mat(3, 1, CV_64F);
+            cv::Mat ray(3, 1, CV_64F);
 
             // Compute ray in camera system
             ray.at<double>(0) = (p.x - cameraMatrix.at<double>(0, 2)) / cameraMatrix.at<double>(0, 0);

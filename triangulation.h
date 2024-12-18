@@ -15,7 +15,8 @@ DLL_EXPORT void calibrate(const double* corners, const double* corners3D, int nu
 
 DLL_EXPORT void calibrateByCalculus(const double *corners, const double *corners3D, int *ids, int numCorners, int width,
                                     int height, int dict, double *cameraMatrixValues, double *distCoeffs,
-                                    int boardWidth, int boardHeight, const char *calib_filename);
+                                    int boardWidth, int boardHeight, double squareLength, double markerLength,
+                                    const char *calib_filename);
 
 DLL_EXPORT void readCalibrationImage(const char* calib_image_path, float* map2D);
 

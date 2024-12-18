@@ -70,6 +70,8 @@ void testCalibrationByCalculus() {
     // find board corners
     int boardWidth = 14;
     int boardHeight = 9;
+    double squareLength = 20;
+    double markerLength = 15;
     std::vector<double> cornersArray(2 * boardWidth * boardHeight);
     std::vector<double> objectPointsArray(3 * boardWidth * boardHeight);
     std::vector<int> ids(boardWidth * boardHeight);
@@ -86,7 +88,7 @@ void testCalibrationByCalculus() {
     cameraMatrix[5] = image.size().height / 2.0;
     cameraMatrix[8] = 1.0;
     calibrateByCalculus(cornersArray.data(), objectPointsArray.data(), ids.data(), n, imageGray.cols, imageGray.rows,
-                        cv::aruco::DICT_4X4_250, cameraMatrix, distCoeffs, boardWidth, boardHeight,
+                        cv::aruco::DICT_4X4_250, cameraMatrix, distCoeffs, boardWidth, boardHeight, squareLength, markerLength,
                         R"(D:\Travail\Affaires\ARDPI\triangulation_2\dev\python\TriangulationTest\calib.exr)");
 
 }
@@ -181,6 +183,6 @@ void printBoard() {
 }
 
 int main() {
-    testRemap();
+    testCalibrationByCalculus();
     return 0;
 }
