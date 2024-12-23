@@ -63,6 +63,19 @@ void testCalibration() {
 }
 
 void testCalibrationByCalculus() {
+    double cameraMatrix[9];
+    double distCoeffs[5];
+    cameraMatrix[0] = 1363.75;
+    cameraMatrix[4] = 1356.71;
+    cameraMatrix[2] = 950.83;
+    cameraMatrix[5] = 518.137;
+    cameraMatrix[8] = 1.0;
+    distCoeffs[0] = 0.184988;
+    distCoeffs[1] = -0.897976;
+    distCoeffs[2] = -0.00355419;
+    distCoeffs[3] = -0.00207657;
+    distCoeffs[4] = 1.32948;
+
     // load image
     cv::Mat image = cv::imread(
         R"(D:\Travail\Affaires\ARDPI\23-04-1 Systeme de localisation\data\board_view_kiyo.jpg)");
@@ -72,28 +85,17 @@ void testCalibrationByCalculus() {
     // find board corners
     int boardWidth = 11;
     int boardHeight = 8;
-    float squareLength = 24.21;
+    float squareLength = 24.12;
     float markerLength = 18.02;
     std::vector<double> cornersArray(2 * boardWidth * boardHeight);
     std::vector<double> objectPointsArray(3 * boardWidth * boardHeight);
     std::vector<int> ids(boardWidth * boardHeight);
+    undistort(imageGray.data, imageGray.cols, imageGray.rows, (int) imageGray.step, cameraMatrix, distCoeffs);
     int n = findBoardCorners(imageGray.data, imageGray.cols, imageGray.rows, (int) imageGray.step,
-                             boardWidth, boardHeight, 17, 13, cv::aruco::DICT_4X4_250,
+                             boardWidth, boardHeight, squareLength, markerLength, cv::aruco::DICT_4X4_250,
                              cornersArray.data(), objectPointsArray.data(), ids.data(), false);
 
-    // calibrate by calculus
-    double cameraMatrix[9];
-    double distCoeffs[5];
-    cameraMatrix[0] = 1363.75;
-    cameraMatrix[4] = 1356.71;
-    cameraMatrix[2] = 950.853;
-    cameraMatrix[5] = 518.095;
-    cameraMatrix[8] = 1.0;
-    distCoeffs[0] = 0.184915;
-    distCoeffs[1] = -0.897613;
-    distCoeffs[2] = -0.00356713;
-    distCoeffs[3] = -0.0020753;
-    distCoeffs[4] = 1.32892;
+    // calibrate
     calibrateByCalculus(cornersArray.data(), objectPointsArray.data(), ids.data(), n, imageGray.cols, imageGray.rows,
                         cv::aruco::DICT_4X4_250, cameraMatrix, distCoeffs, boardWidth, boardHeight, squareLength, markerLength,
                         R"(D:\Travail\Affaires\ARDPI\23-04-1 Systeme de localisation\data\calib.exr)");
@@ -111,12 +113,10 @@ void testCalibrationByCalculus() {
 
     // undistort image
     undistort(imageGray.data, imageGray.cols, imageGray.rows, (int) imageGray.step, cameraMatrix, distCoeffs);
-    cv::imshow("undistorted", imageGray);
-    cv::waitKey(0);
 
     // take first and last corner of undistorted image
     n = findBoardCorners(imageGray.data, imageGray.cols, imageGray.rows, (int) imageGray.step,
-                         boardWidth, boardHeight, 17, 13, cv::aruco::DICT_4X4_250,
+                         boardWidth, boardHeight, squareLength, markerLength, cv::aruco::DICT_4X4_250,
                          cornersArray.data(), objectPointsArray.data(), ids.data(), false);
     firstCorner = cv::Point2f(cornersArray[0], cornersArray[1]);
     lastCorner = cv::Point2f(cornersArray[2 * n - 2], cornersArray[2 * n - 1]);
@@ -230,7 +230,7 @@ void calibrateCamera() {
 
     int boardWidth = 11;
     int boardHeight = 8;
-    float squareLength = 24.21;
+    float squareLength = 24.12;
     float markerLength = 18.02;
     double cameraMatrix[9];
     double distCoeffs[5];
