@@ -1,3 +1,5 @@
+#include <filesystem>
+
 #include "triangulation.h"
 
 int testFindBoardCorners() {
@@ -63,34 +65,65 @@ void testCalibration() {
 void testCalibrationByCalculus() {
     // load image
     cv::Mat image = cv::imread(
-        R"(D:\Travail\Affaires\ARDPI\triangulation_2\data\Triangulation\blender_test\board_view.png)");
+        R"(D:\Travail\Affaires\ARDPI\23-04-1 Systeme de localisation\data\board_view_kiyo.jpg)");
     cv::Mat imageGray;
     cv::cvtColor(image, imageGray, cv::COLOR_BGR2GRAY);
 
     // find board corners
-    int boardWidth = 14;
-    int boardHeight = 9;
-    double squareLength = 20;
-    double markerLength = 15;
+    int boardWidth = 11;
+    int boardHeight = 8;
+    float squareLength = 24.21;
+    float markerLength = 18.02;
     std::vector<double> cornersArray(2 * boardWidth * boardHeight);
     std::vector<double> objectPointsArray(3 * boardWidth * boardHeight);
     std::vector<int> ids(boardWidth * boardHeight);
     int n = findBoardCorners(imageGray.data, imageGray.cols, imageGray.rows, (int) imageGray.step,
                              boardWidth, boardHeight, 17, 13, cv::aruco::DICT_4X4_250,
-                             cornersArray.data(), objectPointsArray.data(), ids.data(), true);
+                             cornersArray.data(), objectPointsArray.data(), ids.data(), false);
 
     // calibrate by calculus
     double cameraMatrix[9];
     double distCoeffs[5];
-    cameraMatrix[0] = 426.0;
-    cameraMatrix[4] = 426.0;
-    cameraMatrix[2] = image.size().width / 2.0;
-    cameraMatrix[5] = image.size().height / 2.0;
+    cameraMatrix[0] = 1363.75;
+    cameraMatrix[4] = 1356.71;
+    cameraMatrix[2] = 950.853;
+    cameraMatrix[5] = 518.095;
     cameraMatrix[8] = 1.0;
+    distCoeffs[0] = 0.184915;
+    distCoeffs[1] = -0.897613;
+    distCoeffs[2] = -0.00356713;
+    distCoeffs[3] = -0.0020753;
+    distCoeffs[4] = 1.32892;
     calibrateByCalculus(cornersArray.data(), objectPointsArray.data(), ids.data(), n, imageGray.cols, imageGray.rows,
                         cv::aruco::DICT_4X4_250, cameraMatrix, distCoeffs, boardWidth, boardHeight, squareLength, markerLength,
-                        R"(D:\Travail\Affaires\ARDPI\triangulation_2\dev\python\TriangulationTest\calib.exr)");
+                        R"(D:\Travail\Affaires\ARDPI\23-04-1 Systeme de localisation\data\calib.exr)");
 
+    // compare distance between observed and calculated points
+    cv::Mat imageCalib = cv::imread(R"(D:\Travail\Affaires\ARDPI\23-04-1 Systeme de localisation\data\calib.exr)", cv::IMREAD_UNCHANGED);
+
+    // take first and last corner of original image
+    cv::Point2f firstCorner = cv::Point2f(cornersArray[0], cornersArray[1]);
+    cv::Point2f lastCorner = cv::Point2f(cornersArray[2 * n - 2], cornersArray[2 * n - 1]);
+    cv::Point3f firstCornerCalib = imageCalib.at<cv::Vec3f>(firstCorner.y, firstCorner.x);
+    cv::Point3f lastCornerCalib = imageCalib.at<cv::Vec3f>(lastCorner.y, lastCorner.x);
+    double distance = cv::norm(firstCornerCalib - lastCornerCalib);
+    std::cout << "Distance between first and last corner (original): " << distance << std::endl;
+
+    // undistort image
+    undistort(imageGray.data, imageGray.cols, imageGray.rows, (int) imageGray.step, cameraMatrix, distCoeffs);
+    cv::imshow("undistorted", imageGray);
+    cv::waitKey(0);
+
+    // take first and last corner of undistorted image
+    n = findBoardCorners(imageGray.data, imageGray.cols, imageGray.rows, (int) imageGray.step,
+                         boardWidth, boardHeight, 17, 13, cv::aruco::DICT_4X4_250,
+                         cornersArray.data(), objectPointsArray.data(), ids.data(), false);
+    firstCorner = cv::Point2f(cornersArray[0], cornersArray[1]);
+    lastCorner = cv::Point2f(cornersArray[2 * n - 2], cornersArray[2 * n - 1]);
+    firstCornerCalib = imageCalib.at<cv::Vec3f>(firstCorner.y, firstCorner.x);
+    lastCornerCalib = imageCalib.at<cv::Vec3f>(lastCorner.y, lastCorner.x);
+    distance = cv::norm(firstCornerCalib - lastCornerCalib);
+    std::cout << "Distance between first and last corner (undistorted): " << distance << std::endl;
 }
 
 void testRemap() {
@@ -168,21 +201,99 @@ void testfindMmarkers() {
 
 void printBoard() {
     // create board
-    int boardWidth = 14;
-    int boardHeight = 9;
-    float squareLength = 17;
-    float markerLength = 13;
-    cv::aruco::Dictionary dictionary = cv::aruco::getPredefinedDictionary(cv::aruco::DICT_4X4_250);
+    int boardWidth = 11;
+    int boardHeight = 8;
+    float squareLength = 24.21;
+    float markerLength = 18.02;
+    cv::aruco::Dictionary dictionary = cv::aruco::getPredefinedDictionary(cv::aruco::DICT_4X4_100);
     cv::Size boardSize(boardWidth, boardHeight);
     cv::aruco::CharucoBoard board(boardSize, squareLength, markerLength, dictionary);
 
     // print board
     cv::Mat boardImage;
-    board.generateImage(cv::Size(1000, 1000), boardImage, 1, 1);
-    cv::imwrite(R"(D:\Travail\Affaires\ARDPI\triangulation_2\data\Triangulation\board.png)", boardImage);
+    board.generateImage(cv::Size(1000, 1000), boardImage, 0, 1);
+    cv::imwrite(R"(D:\Travail\Affaires\ARDPI\23-04-1 Systeme de localisation\data\board.png)", boardImage);
+    cv::namedWindow("board", cv::WINDOW_NORMAL);
+    cv::imshow("board", boardImage);
+    cv::waitKey(0);
+}
+
+void calibrateCamera() {
+    // load image from folder using filesystem
+    std::string folder = R"(C:\Users\vivie\Pictures\Camera Roll\)";
+    std::vector<cv::Mat> images;
+    for (const auto &entry : std::filesystem::directory_iterator(folder)) {
+        if (!entry.path().string().ends_with(".jpg")) continue;
+        cv::Mat image = cv::imread(entry.path().string());
+        images.push_back(image);
+    }
+
+    int boardWidth = 11;
+    int boardHeight = 8;
+    float squareLength = 24.21;
+    float markerLength = 18.02;
+    double cameraMatrix[9];
+    double distCoeffs[5];
+
+    // create vectors
+    std::vector<std::vector<cv::Point2f> > allCorners;
+    std::vector<std::vector<int> > allIds;
+    std::vector<cv::Point3f> allObjectPoints;
+
+    // fill vectors with board found in images
+    cv::aruco::Dictionary dictionary = cv::aruco::getPredefinedDictionary(cv::aruco::DICT_4X4_100);
+    cv::Size boardSize(boardWidth, boardHeight);
+    cv::Ptr<cv::aruco::CharucoBoard> board = cv::makePtr<cv::aruco::CharucoBoard>(boardSize, squareLength, markerLength, dictionary);
+    for (auto &img : images) {
+        cv::Mat imgGray;
+        cv::cvtColor(img, imgGray, cv::COLOR_BGR2GRAY);
+        std::vector<int> markerIds;
+        std::vector<std::vector<cv::Point2f> > markerCorners;
+        std::vector<int> charucoIds;
+        std::vector<cv::Point2f> charucoCorners;
+        cv::aruco::CharucoDetector charucoDetector(*board);
+        cv::aruco::CharucoParameters charucoParams;
+        charucoParams.minMarkers = 1;
+        charucoDetector.setCharucoParameters(charucoParams);
+        charucoDetector.detectBoard(img, charucoCorners, charucoIds, markerCorners, markerIds);
+        allCorners.push_back(charucoCorners);
+        allIds.push_back(charucoIds);
+        for (int i = 0; i < charucoCorners.size(); i++) {
+            allObjectPoints.push_back(board->getChessboardCorners()[charucoIds[i]]);
+        }
+    }
+
+    // calibrate
+    cv::Mat cameraMatrixMat(3, 3, CV_64F, cameraMatrix);
+    cv::Mat distCoeffsMat(1, 5, CV_64F, distCoeffs);
+    double error = 0;
+    error = cv::aruco::calibrateCameraCharuco(
+        allCorners, allIds, board,
+        cv::Size(1920, 1080),
+        cameraMatrixMat, distCoeffsMat);
+
+    // print results
+    std::cout << "Camera matrix: " << cameraMatrixMat << std::endl;
+    std::cout << "Distortion coefficients: " << distCoeffsMat << std::endl;
+    std::cout << "Error: " << error << std::endl;
+
+    // undistort image
+    cv::Mat imgUndistorted;
+    cv::undistort(images[0], imgUndistorted, cameraMatrixMat, distCoeffsMat);
+    cv::imshow("undistorted", imgUndistorted);
+    cv::waitKey(0);
+
+    std::cout << "Calibration done" << std::endl;
+    std::cout << "dist coeffs: " << distCoeffs[0] << " " << distCoeffs[1] << " " << distCoeffs[2] << " " << distCoeffs[3] << " " << distCoeffs[4] << std::endl;
+    std::cout << "camera matrix: "
+            << cameraMatrix[0] << " " << cameraMatrix[1] << " " << cameraMatrix[2] << " "
+            << cameraMatrix[3] << " " << cameraMatrix[4] << " " << cameraMatrix[5] << " "
+            << cameraMatrix[6] << " " << cameraMatrix[7] << " " << cameraMatrix[8] << std::endl;
 }
 
 int main() {
+    // calibrateCamera();
+    // printBoard();
     testCalibrationByCalculus();
     return 0;
 }
