@@ -336,8 +336,8 @@ void createUndistortMap(double *cameraMatrix, double *distCoeffs, int width, int
     auto t0 = std::chrono::high_resolution_clock::now();
     cv::Mat cameraMatrixMat(3, 3, CV_64F, cameraMatrix);
     cv::Mat distCoeffsMat(1, 5, CV_64F, distCoeffs);
-    cv::Mat map1;
-    cv::Mat map2;
+    cv::Mat map1(height, width, CV_32FC1);
+    cv::Mat map2(height, width, CV_32FC1);
     cv::Mat R = cv::Mat::eye(3, 3, CV_64F);
     cv::initUndistortRectifyMap(cameraMatrixMat, distCoeffsMat, R, cameraMatrixMat,
                                 cv::Size(width, height), CV_32FC1, map1, map2);

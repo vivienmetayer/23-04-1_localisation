@@ -171,35 +171,29 @@ void testCalibrationByCalculus() {
 }
 
 void testRemap() {
-    std::vector<double> camMatrix;
-    std::vector<double> distCoeffs;
+    double cameraMatrix[9];
+    double distCoeffs[5];
+    cameraMatrix[0] = 3040.022781196563;
+    cameraMatrix[4] = 3038.316007361436;
+    cameraMatrix[2] = 2253.351931432469;
+    cameraMatrix[5] = 2273.846344756578;
+    cameraMatrix[8] = 1.0;
+    distCoeffs[0] = -0.128096393794965;
+    distCoeffs[1] = 0.04437890045144942;
+    distCoeffs[2] = -0.0003225185663205268;
+    distCoeffs[3] = -6.917872926871078e-05;
+    distCoeffs[4] = -0.02;
 
-    camMatrix.emplace_back(4590.0);
-    camMatrix.emplace_back(0.0);
-    camMatrix.emplace_back(2267);
-    camMatrix.emplace_back(0.0);
-    camMatrix.emplace_back(4590.0);
-    camMatrix.emplace_back(2267);
-    camMatrix.emplace_back(0.0);
-    camMatrix.emplace_back(0.0);
-    camMatrix.emplace_back(1.0);
+    std::vector<float> mapX(4512 * 4512, 0.0f);
+    std::vector<float> mapY(4512 * 4512, 0.0f);
+    createUndistortMap(cameraMatrix, distCoeffs, 4512, 4512, mapX.data(), mapY.data());
 
-    distCoeffs.emplace_back(-0.146);
-    distCoeffs.emplace_back(0.132);
-    distCoeffs.emplace_back(-0.000294);
-    distCoeffs.emplace_back(-0.000213);
-    distCoeffs.emplace_back(-0.0943);
-
-    std::vector<float> mapX(4512 * 4512 * 2);
-    std::vector<float> mapY(4512 * 4512 * 2);
-    createUndistortMap(camMatrix.data(), distCoeffs.data(), 4512, 4512, mapX.data(), mapY.data());
-
-    cv::Mat image = cv::imread(R"(D:\Work\Clients\ARDPI\23-04-1_localisation\images\20241022093602.png)");
+    cv::Mat image = cv::imread(R"(D:\Travail\Affaires\ARDPI\23-04-1 Systeme de localisation\data\DataCalib\Lower\20241022151758.png)");
+    cv::cvtColor(image, image, cv::COLOR_BGR2GRAY);
 
     cv::namedWindow("original", cv::WINDOW_NORMAL);
     cv::imshow("original", image);
 
-    cv::Mat imageUndistorted;
     remap(image.data, image.cols, image.rows, (int) image.step, mapX.data(), mapY.data());
 
     cv::namedWindow("undistorted", cv::WINDOW_NORMAL);
@@ -341,6 +335,7 @@ int main() {
     // calibrateCamera();
     // printBoard();
     // testCalibration();
-    testCalibrationByCalculus();
+    // testCalibrationByCalculus();
+    testRemap();
     return 0;
 }
