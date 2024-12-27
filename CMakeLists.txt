@@ -16,7 +16,9 @@ set(GenICam_INCLUDE_DIR "" CACHE PATH "Path to GenICam include folder")
 set(GenICam_LIB_DIR "" CACHE PATH "Path to GenICam lib folder")
 
 # Triangulation
-add_library(triangulationLib SHARED triangulation.cpp triangulation.h)
+add_library(triangulationLib SHARED triangulation.cpp triangulation.h
+        TriangulationEngine.cpp
+        TriangulationEngine.h)
 target_include_directories(triangulationLib PUBLIC ${OpenCV_INCLUDE_DIRS})
 target_link_libraries(triangulationLib ${OpenCV_LIBS})
 
