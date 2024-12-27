@@ -3,6 +3,7 @@
 
 #include <opencv2/opencv.hpp>
 #include <opencv2/aruco.hpp>
+#include "TriangulationEngine.h"
 
 #define DLL_EXPORT extern "C" __declspec(dllexport)
 
@@ -33,4 +34,15 @@ DLL_EXPORT void createUndistortMap(double *cameraMatrix, double *distCoeffs, int
                                    float *mapDataX, float *mapDataY);
 
 DLL_EXPORT void remap(unsigned char *imagePtr, int width, int height, int lineWidth, float *mapDataX, float *mapDataY);
+
+// TriangulationEngine functions
+DLL_EXPORT void createTriangulationEngine(TriangulationEngine *engineOut);
+DLL_EXPORT void TE_initUndistortMaps(TriangulationEngine *engine, double *cameraMatrix, double *distCoeffs, int width, int height);
+DLL_EXPORT void TE_setExtractionParameters(TriangulationEngine *engine, int threshold, bool firstSignal, int minLineWidth);
+DLL_EXPORT void TE_setImage(TriangulationEngine *engine, unsigned char *imagePtr, int width, int height, int lineWidth);
+DLL_EXPORT void TE_extractLaserLine(TriangulationEngine *engine);
+DLL_EXPORT void TE_remapImage(TriangulationEngine *engine);
+DLL_EXPORT void TE_remapLine(TriangulationEngine *engine);
+DLL_EXPORT void TE_getLine(TriangulationEngine *engine, double *line, int size);
+
 #endif //INC_23_04_1_LOCALISATION_TRIANGULATION_H

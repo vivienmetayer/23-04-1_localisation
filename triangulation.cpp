@@ -401,3 +401,36 @@ int detectMarkers(unsigned char *imagePtr, int width, int height, int lineWidth,
 
     return 0;
 }
+
+void createTriangulationEngine(TriangulationEngine *engineOut) {
+    const auto* engine = new TriangulationEngine();
+    *engineOut = *engine;
+}
+
+void TE_initUndistortMaps(TriangulationEngine *engine, double *cameraMatrix, double *distCoeffs, int width, int height) {
+    engine->initUndistortMaps(cameraMatrix, distCoeffs, width, height);
+}
+
+void TE_setExtractionParameters(TriangulationEngine *engine, int threshold, bool firstSignal, int minLineWidth) {
+    engine->setExtractionParameters(threshold, firstSignal, minLineWidth);
+}
+
+void TE_setImage(TriangulationEngine *engine, unsigned char *imagePtr, int width, int height, int lineWidth) {
+    engine->setImage(imagePtr, width, height, lineWidth);
+}
+
+void TE_extractLaserLine(TriangulationEngine *engine) {
+    engine->extractLaserLine();
+}
+
+void TE_remapImage(TriangulationEngine *engine) {
+    engine->remapImage();
+}
+
+void TE_remapLine(TriangulationEngine *engine) {
+    engine->remapLine();
+}
+
+void TE_getLine(TriangulationEngine *engine, double *line, int size) {
+    engine->getLine(line, size);
+}
