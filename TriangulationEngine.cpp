@@ -33,12 +33,17 @@ void TriangulationEngine::extractLaserLine() {
         // read pixels from column, threshold and find line
         for (int j = 0; j < _image.rows; ++j) {
             if (column.at<uchar>(j) > _threshold) {
+                int sum = column.at<uchar>(j);
+                int positionWeight = j * column.at<uchar>(j);
                 // search for signal end
                 int k = j;
                 while (k < _image.rows && column.at<uchar>(k) > _threshold) {
                     k++;
+                    sum += column.at<uchar>(k);
+                    positionWeight += k * column.at<uchar>(k);
                 }
-                laserPoint = cv::Point2f(i, (j + k) / 2);
+                float position = static_cast<float>(positionWeight) / static_cast<float>(sum);
+                laserPoint = cv::Point2f(static_cast<float>(i), position);
                 if (_firstSignal) break;
             }
         }
