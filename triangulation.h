@@ -43,7 +43,7 @@ DLL_EXPORT void TE_setImage(TriangulationEngine *engine, unsigned char *imagePtr
 DLL_EXPORT void TE_extractLaserLine(TriangulationEngine *engine);
 DLL_EXPORT void TE_remapImage(TriangulationEngine *engine);
 DLL_EXPORT void TE_remapLine(TriangulationEngine *engine);
-DLL_EXPORT void TE_getLine(TriangulationEngine *engine, double *line, int *size);
+DLL_EXPORT void TE_getLine(TriangulationEngine *engine, double *line, int *lineWidths, int *size);
 DLL_EXPORT void deleteTriangulationEngine(TriangulationEngine *engine);
 
 #endif //INC_23_04_1_LOCALISATION_TRIANGULATION_H

@@ -30,12 +30,13 @@ void TriangulationEngine::extractLaserLine() {
     for (int i = 0; i < _image.cols; ++i) {
         cv::Mat column = _image.col(i);
         cv::Point2f laserPoint;
+        int lineWidth;
         // read pixels from column, threshold and find line
         for (int j = 0; j < _image.rows; ++j) {
             if (column.at<uchar>(j) > _threshold) {
                 int sum = column.at<uchar>(j);
                 int positionWeight = j * column.at<uchar>(j);
-                int lineWidth = 0;
+                lineWidth = 0;
 
                 // search for signal end
                 int k = j;
@@ -55,6 +56,7 @@ void TriangulationEngine::extractLaserLine() {
             }
         }
         _line.push_back(laserPoint);
+        _lineWidths.push_back(lineWidth);
     }
 }
 
@@ -65,16 +67,14 @@ void TriangulationEngine::remapImage() {
 }
 
 void TriangulationEngine::remapLine() {
-    for (auto &point : _line) {
-        cv::Mat pointMat(1, 1, CV_32FC2, &point);
-        cv::remap(pointMat, pointMat, _mapX, _mapY, cv::INTER_LINEAR);
-    }
+    cv::undistortPoints(_line, _line, cameraMatrix, distCoeffs);
 }
 
-void TriangulationEngine::getLine(double *line, int *size) const {
+void TriangulationEngine::getLine(double *line, int *lineWidths, int *size) const {
     for (int i = 0; i < _line.size(); ++i) {
         line[2 * i] = _line[i].x;
         line[2 * i + 1] = _line[i].y;
+        lineWidths[i] = _lineWidths[i];
     }
     *size = static_cast<int>(_line.size());
 }
