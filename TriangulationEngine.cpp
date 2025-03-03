@@ -67,7 +67,33 @@ void TriangulationEngine::remapImage() {
 }
 
 void TriangulationEngine::remapLine() {
-    cv::undistortPoints(_line, _line, cameraMatrix, distCoeffs);
+    for (auto &point : _line) {
+        // Interpolate the point using the maps
+        float x = point.x;
+        float y = point.y;
+
+        // Bilinear interpolation to get the remapped point
+        int x0 = static_cast<int>(x);
+        int y0 = static_cast<int>(y);
+        int x1 = x0 + 1;
+        int y1 = y0 + 1;
+
+        float a = x - x0;
+        float b = y - y0;
+
+        float newX = (1 - a) * (1 - b) * _mapX.at<float>(y0, x0) +
+                     a * (1 - b) * _mapX.at<float>(y0, x1) +
+                     (1 - a) * b * _mapX.at<float>(y1, x0) +
+                     a * b * _mapX.at<float>(y1, x1);
+
+        float newY = (1 - a) * (1 - b) * _mapY.at<float>(y0, x0) +
+                     a * (1 - b) * _mapY.at<float>(y0, x1) +
+                     (1 - a) * b * _mapY.at<float>(y1, x0) +
+                     a * b * _mapY.at<float>(y1, x1);
+
+        point.x = newX;
+        point.y = newY;
+    }
 }
 
 void TriangulationEngine::getLine(double *line, int *lineWidths, int *size) const {
