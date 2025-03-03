@@ -22,6 +22,13 @@ add_library(triangulationLib SHARED triangulation.cpp triangulation.h
 target_include_directories(triangulationLib PUBLIC ${OpenCV_INCLUDE_DIRS})
 target_link_libraries(triangulationLib ${OpenCV_LIBS})
 
+# add Protection with Dinkey
+set(protection_lib_dir "" CACHE PATH "Path to Dinkey lib folder")
+set(protection_include_dir "" CACHE PATH "Path to Dinkey include folder")
+target_include_directories(triangulationLib PUBLIC ${protection_include_dir})
+target_link_directories(triangulationLib PUBLIC ${protection_lib_dir})
+target_link_libraries(triangulationLib triangulationProtectionLib.lib)
+
 add_executable(TriangulationTest main.cpp)
 target_link_libraries(TriangulationTest triangulationLib ${OpenCV_LIBS})
 

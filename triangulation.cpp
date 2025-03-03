@@ -1,3 +1,4 @@
+#include <Protection.h>
 #include "triangulation.h"
 
 double distance_squared_2d(const cv::Point2f &p1, const cv::Point2f &p2) {
@@ -423,8 +424,12 @@ void TE_setImage(TriangulationEngine *engine, unsigned char *imagePtr, int width
     engine->setImage(imagePtr, width, height, lineWidth);
 }
 
-void TE_extractLaserLine(TriangulationEngine *engine) {
-    engine->extractLaserLine();
+int TE_extractLaserLine(TriangulationEngine *engine, Protection *protection) {
+    if (protection->isAuthorized()) {
+        engine->extractLaserLine();
+        return 0;
+    }
+    return -1;
 }
 
 void TE_remapImage(TriangulationEngine *engine) {
