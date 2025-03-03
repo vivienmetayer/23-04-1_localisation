@@ -432,8 +432,12 @@ int TE_extractLaserLine(TriangulationEngine *engine, Protection *protection) {
     return -1;
 }
 
-void TE_remapImage(TriangulationEngine *engine) {
-    engine->remapImage();
+int TE_remapImage(TriangulationEngine *engine, Protection *protection) {
+    if (protection->isAuthorized()) {
+        engine->remapImage();
+        return 0;
+    }
+    return -1;
 }
 
 void TE_remapLine(TriangulationEngine *engine) {
