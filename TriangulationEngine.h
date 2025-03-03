@@ -16,7 +16,7 @@ public:
     void extractLaserLine();
     void remapImage();
     void remapLine();
-    void getLine(double *line, int size) const;
+    void getLine(double *line, int *size) const;
 private:
     cv::Mat _image;
     cv::Mat _mapX;

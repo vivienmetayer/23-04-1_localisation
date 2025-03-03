@@ -435,6 +435,6 @@ void TE_remapLine(TriangulationEngine *engine) {
     engine->remapLine();
 }
 
-void TE_getLine(TriangulationEngine *engine, double *line, int size) {
+void TE_getLine(TriangulationEngine *engine, double *line, int *size) {
     engine->getLine(line, size);
 }

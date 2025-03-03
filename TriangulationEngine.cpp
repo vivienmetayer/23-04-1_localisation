@@ -35,16 +35,23 @@ void TriangulationEngine::extractLaserLine() {
             if (column.at<uchar>(j) > _threshold) {
                 int sum = column.at<uchar>(j);
                 int positionWeight = j * column.at<uchar>(j);
+                int lineWidth = 0;
+
                 // search for signal end
                 int k = j;
                 while (k < _image.rows && column.at<uchar>(k) > _threshold) {
                     k++;
                     sum += column.at<uchar>(k);
                     positionWeight += k * column.at<uchar>(k);
+                    lineWidth++;
                 }
-                float position = static_cast<float>(positionWeight) / static_cast<float>(sum);
-                laserPoint = cv::Point2f(static_cast<float>(i), position);
-                if (_firstSignal) break;
+
+                // Check if the detected line width is greater than or equal to _minLineWidth
+                if (lineWidth >= _minLineWidth) {
+                    float position = static_cast<float>(positionWeight) / static_cast<float>(sum);
+                    laserPoint = cv::Point2f(static_cast<float>(i), position);
+                    if (_firstSignal) break;
+                }
             }
         }
         _line.push_back(laserPoint);
@@ -64,9 +71,10 @@ void TriangulationEngine::remapLine() {
     }
 }
 
-void TriangulationEngine::getLine(double *line, const int size) const {
-    for (int i = 0; i < size; ++i) {
+void TriangulationEngine::getLine(double *line, int *size) const {
+    for (int i = 0; i < _line.size(); ++i) {
         line[2 * i] = _line[i].x;
         line[2 * i + 1] = _line[i].y;
     }
+    *size = static_cast<int>(_line.size());
 }
