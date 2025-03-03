@@ -402,9 +402,13 @@ int detectMarkers(unsigned char *imagePtr, int width, int height, int lineWidth,
     return 0;
 }
 
-void createTriangulationEngine(TriangulationEngine *engineOut) {
-    const auto* engine = new TriangulationEngine();
-    *engineOut = *engine;
+TriangulationEngine* createTriangulationEngine() {
+    auto* engine = new TriangulationEngine();
+    return engine;
+}
+
+void deleteTriangulationEngine(TriangulationEngine *engine) {
+    delete engine;
 }
 
 void TE_initUndistortMaps(TriangulationEngine *engine, double *cameraMatrix, double *distCoeffs, int width, int height) {

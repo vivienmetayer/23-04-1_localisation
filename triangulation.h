@@ -36,7 +36,7 @@ DLL_EXPORT void createUndistortMap(double *cameraMatrix, double *distCoeffs, int
 DLL_EXPORT void remap(unsigned char *imagePtr, int width, int height, int lineWidth, float *mapDataX, float *mapDataY);
 
 // TriangulationEngine functions
-DLL_EXPORT void createTriangulationEngine(TriangulationEngine *engineOut);
+DLL_EXPORT TriangulationEngine* createTriangulationEngine();
 DLL_EXPORT void TE_initUndistortMaps(TriangulationEngine *engine, double *cameraMatrix, double *distCoeffs, int width, int height);
 DLL_EXPORT void TE_setExtractionParameters(TriangulationEngine *engine, int threshold, bool firstSignal, int minLineWidth);
 DLL_EXPORT void TE_setImage(TriangulationEngine *engine, unsigned char *imagePtr, int width, int height, int lineWidth);
@@ -44,5 +44,6 @@ DLL_EXPORT void TE_extractLaserLine(TriangulationEngine *engine);
 DLL_EXPORT void TE_remapImage(TriangulationEngine *engine);
 DLL_EXPORT void TE_remapLine(TriangulationEngine *engine);
 DLL_EXPORT void TE_getLine(TriangulationEngine *engine, double *line, int size);
+DLL_EXPORT void deleteTriangulationEngine(TriangulationEngine *engine);
 
 #endif //INC_23_04_1_LOCALISATION_TRIANGULATION_H
