@@ -382,7 +382,9 @@ int createUndistortMap(Protection *protection, double *cameraMatrix, double *dis
 //}
 
 int detectMarkers(Protection *protection, unsigned char *imagePtr, int width, int height, int lineWidth, int dict,
-                  double *corners, int *ids, int *numMarkers, int maxMarkers, bool drawMarkers) {
+                  double *corners, int *ids, int *numMarkers, int maxMarkers, bool drawMarkers,
+                  double markerLength, double *cameraMatrix, double *distCoeffs,
+                  double *R, double *T) {
     if (!protection->isAuthorized()) return -1;
     cv::Mat image(height, width, CV_8UC1, imagePtr, lineWidth);
     cv::aruco::Dictionary dictionary = cv::aruco::getPredefinedDictionary(dict);
@@ -410,6 +412,33 @@ int detectMarkers(Protection *protection, unsigned char *imagePtr, int width, in
         markersToDraw.insert(markersToDraw.end(), markerCorners.begin(), markerCorners.begin() + size);
         idsToDraw.insert(idsToDraw.end(), markerIds.begin(), markerIds.begin() + size);
         cv::aruco::drawDetectedMarkers(image, markersToDraw, idsToDraw);
+    }
+
+    // calculate pose for each marker
+    size_t nMarkers = markerCorners.size();
+    std::vector<cv::Vec3d> rvecs(nMarkers), tvecs(nMarkers);
+    cv::Mat objPoints(4, 1, CV_32FC3);
+    cv::Mat camMatrix(3, 3, CV_64F, cameraMatrix);
+    cv::Mat distCoeffsMatrix(1, 5, CV_64F, distCoeffs);
+    objPoints.ptr<cv::Vec3f>(0)[0] = cv::Vec3f(-markerLength/2.f, markerLength/2.f, 0);
+    objPoints.ptr<cv::Vec3f>(0)[1] = cv::Vec3f(markerLength/2.f, markerLength/2.f, 0);
+    objPoints.ptr<cv::Vec3f>(0)[2] = cv::Vec3f(markerLength/2.f, -markerLength/2.f, 0);
+    objPoints.ptr<cv::Vec3f>(0)[3] = cv::Vec3f(-markerLength/2.f, -markerLength/2.f, 0);
+    if(!markerIds.empty()) {
+        // Calculate pose for each marker
+        for (size_t i = 0; i < nMarkers; i++) {
+            solvePnP(objPoints, markerCorners.at(i), camMatrix, distCoeffsMatrix, rvecs.at(i), tvecs.at(i));
+        }
+    }
+
+    // output rvecs and tvecs
+    for (int i = 0; i < size; ++i) {
+        R[3 * i] = rvecs[i][0];
+        R[3 * i + 1] = rvecs[i][1];
+        R[3 * i + 2] = rvecs[i][2];
+        T[3 * i] = tvecs[i][0];
+        T[3 * i + 1] = tvecs[i][1];
+        T[3 * i + 2] = tvecs[i][2];
     }
 
     return 0;
