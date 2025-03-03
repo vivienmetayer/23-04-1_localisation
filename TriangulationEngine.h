@@ -8,10 +8,15 @@
 #include <opencv2/opencv.hpp>
 #include <opencv2/aruco.hpp>
 
+enum orientation {
+    HORIZONTAL = 0,
+    VERTICAL
+};
+
 class TriangulationEngine {
 public:
     void initUndistortMaps(double *cameraMatrix, double *distCoeffs, int width, int height);
-    void setExtractionParameters(int threshold, bool firstSignal, int minLineWidth);
+    void setExtractionParameters(int threshold, bool firstSignal, int minLineWidth, int orientation);
     void setImage(unsigned char *imagePtr, int width, int height, int lineWidth);
     void extractLaserLine();
     void remapImage();
@@ -26,6 +31,7 @@ private:
     int _threshold {25};
     bool _firstSignal {true};
     int _minLineWidth {2};
+    orientation _orientation {VERTICAL};
 };
 
 

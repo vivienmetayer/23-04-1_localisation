@@ -457,8 +457,8 @@ void TE_initUndistortMaps(TriangulationEngine *engine, double *cameraMatrix, dou
     engine->initUndistortMaps(cameraMatrix, distCoeffs, width, height);
 }
 
-void TE_setExtractionParameters(TriangulationEngine *engine, int threshold, bool firstSignal, int minLineWidth) {
-    engine->setExtractionParameters(threshold, firstSignal, minLineWidth);
+void TE_setExtractionParameters(TriangulationEngine *engine, int threshold, bool firstSignal, int minLineWidth, int orientation) {
+    engine->setExtractionParameters(threshold, firstSignal, minLineWidth, orientation);
 }
 
 void TE_setImage(TriangulationEngine *engine, unsigned char *imagePtr, int width, int height, int lineWidth) {

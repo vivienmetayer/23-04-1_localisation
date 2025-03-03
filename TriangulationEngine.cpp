@@ -12,10 +12,11 @@ void TriangulationEngine::initUndistortMaps(double *cameraMatrix, double *distCo
                                 cv::Size(width, height), CV_32FC1, _mapX, _mapY);
 }
 
-void TriangulationEngine::setExtractionParameters(const int threshold, const bool firstSignal, const int minLineWidth) {
+void TriangulationEngine::setExtractionParameters(const int threshold, const bool firstSignal, const int minLineWidth, int scanOrientation) {
     _threshold = threshold;
     _firstSignal = firstSignal;
     _minLineWidth = minLineWidth;
+    _orientation = static_cast<orientation>(scanOrientation);
 }
 
 void TriangulationEngine::setImage(unsigned char *imagePtr, const int width, const int height, const int lineWidth) {
@@ -23,16 +24,18 @@ void TriangulationEngine::setImage(unsigned char *imagePtr, const int width, con
 }
 
 void TriangulationEngine::extractLaserLine() {
+    int numLines = _orientation == VERTICAL ? _image.rows : _image.cols;
+    int lineLength = _orientation == VERTICAL ? _image.cols : _image.rows;
     _line.clear();
-    _line.reserve(_image.rows);
+    _line.reserve(numLines);
 
-    // for each column, find laser line
-    for (int i = 0; i < _image.cols; ++i) {
-        cv::Mat column = _image.col(i);
+    // for each line, find laser line
+    for (int i = 0; i < numLines; ++i) {
+        cv::Mat column = _orientation == VERTICAL ? _image.col(i) : _image.row(i);
         cv::Point2f laserPoint;
         int lineWidth;
         // read pixels from column, threshold and find line
-        for (int j = 0; j < _image.rows; ++j) {
+        for (int j = 0; j < lineLength; ++j) {
             if (column.at<uchar>(j) > _threshold) {
                 int sum = column.at<uchar>(j);
                 int positionWeight = j * column.at<uchar>(j);
@@ -40,7 +43,7 @@ void TriangulationEngine::extractLaserLine() {
 
                 // search for signal end
                 int k = j;
-                while (k < _image.rows && column.at<uchar>(k) > _threshold) {
+                while (k < lineLength && column.at<uchar>(k) > _threshold) {
                     k++;
                     sum += column.at<uchar>(k);
                     positionWeight += k * column.at<uchar>(k);
@@ -51,12 +54,18 @@ void TriangulationEngine::extractLaserLine() {
                 if (lineWidth >= _minLineWidth) {
                     float position = static_cast<float>(positionWeight) / static_cast<float>(sum);
                     laserPoint = cv::Point2f(static_cast<float>(i), position);
+                    if (_orientation == HORIZONTAL) {
+                        laserPoint = cv::Point2f(position, static_cast<float>(i));
+                    }
                     if (_firstSignal) break;
+                    else j = k;
                 }
             }
         }
-        _line.push_back(laserPoint);
-        _lineWidths.push_back(lineWidth);
+        if (lineWidth >= _minLineWidth) {
+            _line.push_back(laserPoint);
+            _lineWidths.push_back(lineWidth);
+        }
     }
 }
 
