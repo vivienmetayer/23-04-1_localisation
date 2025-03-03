@@ -55,9 +55,10 @@ cv::Point3f applyBarycentricCoords(const std::vector<double> &coords, const std:
     return result;
 }
 
-int findBoardCorners(unsigned char *imagePtr, int width, int height, int lineWidth,
+int findBoardCorners(Protection *protection, unsigned char *imagePtr, int width, int height, int lineWidth,
                      int boardWidth, int boardHeight, float squareLength, float markerLength, int dictionaryId,
                      double *corners, double *objectPoints, int *ids, bool drawMarkers) {
+    if (!protection->isAuthorized()) return -1;
     // get image from LabVIEW pointer
     cv::Mat image(cv::Size(width, height), CV_8UC1, imagePtr, lineWidth);
 
@@ -156,46 +157,47 @@ bool searchClosestPoints(cv::Point2f point,
     return true;
 }
 
-void calibrate(const double *corners, const double *corners3D, int numCorners, int width, int height,
-               const char *calib_filename) {
-    std::vector<cv::Point2f> m_corners(numCorners);
-    for (int i = 0; i < numCorners; ++i) {
-        m_corners[i] = cv::Point2f{static_cast<float>(corners[2 * i]), static_cast<float>(corners[2 * i + 1])};
-    }
-    std::vector<cv::Point3f> m_corners3D(numCorners);
-    for (int i = 0; i < numCorners; ++i) {
-        m_corners3D[i] = cv::Point3f{
-            static_cast<float>(corners3D[3 * i]),
-            static_cast<float>(corners3D[3 * i + 1]),
-            static_cast<float>(corners3D[3 * i + 2])
-        };
-    }
+//void calibrate(const double *corners, const double *corners3D, int numCorners, int width, int height,
+//               const char *calib_filename) {
+//    std::vector<cv::Point2f> m_corners(numCorners);
+//    for (int i = 0; i < numCorners; ++i) {
+//        m_corners[i] = cv::Point2f{static_cast<float>(corners[2 * i]), static_cast<float>(corners[2 * i + 1])};
+//    }
+//    std::vector<cv::Point3f> m_corners3D(numCorners);
+//    for (int i = 0; i < numCorners; ++i) {
+//        m_corners3D[i] = cv::Point3f{
+//            static_cast<float>(corners3D[3 * i]),
+//            static_cast<float>(corners3D[3 * i + 1]),
+//            static_cast<float>(corners3D[3 * i + 2])
+//        };
+//    }
+//
+//    cv::Mat calib_image(height, width, CV_32FC3);
+//    for (int i = 0; i < height; ++i) {
+//        for (int j = 0; j < width; ++j) {
+//            cv::Point2f p{static_cast<float>(j), static_cast<float>(i)};
+//            std::vector<int> indices;
+//            searchClosestPoints(p, m_corners, m_corners3D, indices);
+//
+//            std::vector<cv::Point2f> points{m_corners[indices[0]], m_corners[indices[1]], m_corners[indices[2]]};
+//            std::vector<double> barycentricCoords = getBarycentricCoordinates(p, points);
+//
+//            std::vector<cv::Point3f> points3D{
+//                m_corners3D[indices[0]], m_corners3D[indices[1]], m_corners3D[indices[2]]
+//            };
+//            cv::Point3f result = applyBarycentricCoords(barycentricCoords, points3D);
+//
+//            calib_image.at<cv::Vec3f>(i * width + j) = cv::Vec3f(result.x, result.y, result.z);
+//        }
+//    }
+//    cv::imwrite(calib_filename, calib_image);
+//}
 
-    cv::Mat calib_image(height, width, CV_32FC3);
-    for (int i = 0; i < height; ++i) {
-        for (int j = 0; j < width; ++j) {
-            cv::Point2f p{static_cast<float>(j), static_cast<float>(i)};
-            std::vector<int> indices;
-            searchClosestPoints(p, m_corners, m_corners3D, indices);
-
-            std::vector<cv::Point2f> points{m_corners[indices[0]], m_corners[indices[1]], m_corners[indices[2]]};
-            std::vector<double> barycentricCoords = getBarycentricCoordinates(p, points);
-
-            std::vector<cv::Point3f> points3D{
-                m_corners3D[indices[0]], m_corners3D[indices[1]], m_corners3D[indices[2]]
-            };
-            cv::Point3f result = applyBarycentricCoords(barycentricCoords, points3D);
-
-            calib_image.at<cv::Vec3f>(i * width + j) = cv::Vec3f(result.x, result.y, result.z);
-        }
-    }
-    cv::imwrite(calib_filename, calib_image);
-}
-
-void calibrateByCalculus(const double *corners, const double *corners3D, int *ids, int numCorners, int width,
+int calibrateByCalculus(Protection *protection, const double *corners, const double *corners3D, int *ids, int numCorners, int width,
                          int height, int dict, double *cameraMatrixValues, double *distCoeffs,
                          int boardWidth, int boardHeight, double squareLength, double markerLength,
                          const char *calib_filename) {
+    if (!protection->isAuthorized()) return -1;
     // get cam matrix and dist coeffs
     cv::Mat cameraMatrix(3, 3, CV_64F, cameraMatrixValues);
     cv::Mat distCoeffsMat(1, 5, CV_64F, distCoeffs);
@@ -255,9 +257,12 @@ void calibrateByCalculus(const double *corners, const double *corners3D, int *id
         }
     }
     cv::imwrite(calib_filename, calib_image);
+    return 0;
 }
 
-void readCalibrationImage(const char *calib_image_path, float *map2D) {
+int readCalibrationImage(Protection *protection, const char *calib_image_path, float *map2D) {
+    if (!protection->isAuthorized()) return -1;
+
     cv::Mat image = cv::imread(calib_image_path, cv::IMREAD_UNCHANGED);
 
     for (int i = 0; i < image.rows; ++i) {
@@ -267,10 +272,14 @@ void readCalibrationImage(const char *calib_image_path, float *map2D) {
             map2D[(i * image.cols + j) * 2 + 1] = p3D[1];
         }
     }
+
+    return 0;
 }
 
-double calibrateCamera(double *corners, int *ids, const int *markersPerFrame, int numFrames,
+double calibrateCamera(Protection *protection, double *corners, int *ids, const int *markersPerFrame, int numFrames,
                        int boardWidth, int boardHeight, float squareLength, float markerLength, int dict, double *cameraMatrix, double *distCoeffs) {
+    if (!protection->isAuthorized()) return -1.0;
+
     // create board
     cv::aruco::Dictionary dictionary = cv::aruco::getPredefinedDictionary(dict);
     cv::Size boardSize(boardWidth, boardHeight);
@@ -322,18 +331,19 @@ double calibrateCamera(double *corners, int *ids, const int *markersPerFrame, in
     return error;
 }
 
-void undistort(unsigned char *imagePtr, int width, int height, int lineWidth, double *cameraMatrix,
-               double *distCoeffs) {
-    cv::Mat image(height, width, CV_8UC1, imagePtr, lineWidth);
-    cv::Mat imageUndistorted;
-    cv::Mat cameraMatrixMat(3, 3, CV_64F, cameraMatrix);
-    cv::Mat distCoeffsMat(1, 5, CV_64F, distCoeffs);
-    cv::undistort(image, imageUndistorted, cameraMatrixMat, distCoeffsMat);
-    imageUndistorted.copyTo(image);
-}
+//void undistort(unsigned char *imagePtr, int width, int height, int lineWidth, double *cameraMatrix,
+//               double *distCoeffs) {
+//    cv::Mat image(height, width, CV_8UC1, imagePtr, lineWidth);
+//    cv::Mat imageUndistorted;
+//    cv::Mat cameraMatrixMat(3, 3, CV_64F, cameraMatrix);
+//    cv::Mat distCoeffsMat(1, 5, CV_64F, distCoeffs);
+//    cv::undistort(image, imageUndistorted, cameraMatrixMat, distCoeffsMat);
+//    imageUndistorted.copyTo(image);
+//}
 
-void createUndistortMap(double *cameraMatrix, double *distCoeffs, int width, int height,
+int createUndistortMap(Protection *protection, double *cameraMatrix, double *distCoeffs, int width, int height,
                         float *mapDataX, float *mapDataY) {
+    if (!protection->isAuthorized()) return -1;
     auto t0 = std::chrono::high_resolution_clock::now();
     cv::Mat cameraMatrixMat(3, 3, CV_64F, cameraMatrix);
     cv::Mat distCoeffsMat(1, 5, CV_64F, distCoeffs);
@@ -359,19 +369,21 @@ void createUndistortMap(double *cameraMatrix, double *distCoeffs, int width, int
     std::cout << "Time to copy undistort map: "
               << std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count()
               << " milliseconds" << std::endl;
+    return 0;
 }
 
-void remap(unsigned char *imagePtr, int width, int height, int lineWidth, float *mapDataX, float* mapDataY) {
-    cv::Mat image(height, width, CV_8UC1, imagePtr, lineWidth);
-    cv::Mat imageUndistorted;
-    cv::Mat mapX(height, width, CV_32FC1, mapDataX);
-    cv::Mat mapY(height, width, CV_32FC1, mapDataY);
-    cv::remap(image, imageUndistorted, mapX, mapY, cv::INTER_LINEAR);
-    imageUndistorted.copyTo(image);
-}
+//void remap(unsigned char *imagePtr, int width, int height, int lineWidth, float *mapDataX, float* mapDataY) {
+//    cv::Mat image(height, width, CV_8UC1, imagePtr, lineWidth);
+//    cv::Mat imageUndistorted;
+//    cv::Mat mapX(height, width, CV_32FC1, mapDataX);
+//    cv::Mat mapY(height, width, CV_32FC1, mapDataY);
+//    cv::remap(image, imageUndistorted, mapX, mapY, cv::INTER_LINEAR);
+//    imageUndistorted.copyTo(image);
+//}
 
-int detectMarkers(unsigned char *imagePtr, int width, int height, int lineWidth, int dict,
+int detectMarkers(Protection *protection, unsigned char *imagePtr, int width, int height, int lineWidth, int dict,
                   double *corners, int *ids, int *numMarkers, int maxMarkers, bool drawMarkers) {
+    if (!protection->isAuthorized()) return -1;
     cv::Mat image(height, width, CV_8UC1, imagePtr, lineWidth);
     cv::aruco::Dictionary dictionary = cv::aruco::getPredefinedDictionary(dict);
 
@@ -440,9 +452,9 @@ int TE_remapImage(TriangulationEngine *engine, Protection *protection) {
     return -1;
 }
 
-void TE_remapLine(TriangulationEngine *engine) {
-    engine->remapLine();
-}
+//void TE_remapLine(TriangulationEngine *engine) {
+//    engine->remapLine();
+//}
 
 void TE_getLine(TriangulationEngine *engine, double *line, int *lineWidths, int *size) {
     engine->getLine(line, lineWidths, size);

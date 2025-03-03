@@ -15,7 +15,7 @@ public:
     void setImage(unsigned char *imagePtr, int width, int height, int lineWidth);
     void extractLaserLine();
     void remapImage();
-    void remapLine();
+//    void remapLine();
     void getLine(double *line, int *lineWidths, int *size) const;
 private:
     cv::Mat _image;
