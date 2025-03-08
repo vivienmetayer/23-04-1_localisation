@@ -45,5 +45,11 @@ DLL_EXPORT int TE_remapImage(TriangulationEngine *engine, Protection *protection
 //DLL_EXPORT void TE_remapLine(TriangulationEngine *engine);
 DLL_EXPORT int TE_getLine(TriangulationEngine *engine, Protection *protection, double *line, int *lineWidths, int *size);
 DLL_EXPORT void deleteTriangulationEngine(TriangulationEngine *engine);
+DLL_EXPORT int TE_calibrateByCalculus(TriangulationEngine *engine, Protection *protection,
+                                      const double *corners, const double *corners3D, int *ids, int numCorners,
+                                      int width, int height, int dict, double *cameraMatrixValues,
+                                      double *distCoeffs, int boardWidth, int boardHeight, double squareLength,
+                                      double markerLength, const char *calib_filename);
+DLL_EXPORT int TE_readCalibrationImage(TriangulationEngine *engine, Protection *protection, const char *fileName);
 
 #endif //INC_23_04_1_LOCALISATION_TRIANGULATION_H

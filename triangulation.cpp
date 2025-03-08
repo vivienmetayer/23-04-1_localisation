@@ -497,3 +497,21 @@ int TE_getLine(TriangulationEngine *engine, Protection *protection, double *line
     engine->getLine(line, lineWidths, size);
     return 0;
 }
+
+int TE_calibrateByCalculus(TriangulationEngine *engine, Protection *protection,
+                           const double *corners, const double *corners3D, int *ids, int numCorners,
+                           int width, int height, int dict, double *cameraMatrixValues,
+                           double *distCoeffs, int boardWidth, int boardHeight, double squareLength,
+                           double markerLength, const char *calib_filename) {
+    if (!protection->isAuthorized()) return -1;
+    engine->calibrateByCalculus(corners, corners3D, ids, numCorners,
+                                width, height, dict, cameraMatrixValues, distCoeffs,
+                                boardWidth, boardHeight, squareLength, markerLength, calib_filename);
+    return 0;
+}
+
+int TE_readCalibrationImage(TriangulationEngine *engine, Protection *protection, const char *fileName) {
+    if (!protection->isAuthorized()) return -1;
+    engine->readCalibrationImage(fileName);
+    return 0;
+}
