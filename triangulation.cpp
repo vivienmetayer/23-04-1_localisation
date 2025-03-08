@@ -444,7 +444,8 @@ int detectMarkers(Protection *protection, unsigned char *imagePtr, int width, in
     return 0;
 }
 
-TriangulationEngine* createTriangulationEngine() {
+TriangulationEngine* createTriangulationEngine(Protection *protection) {
+    if (!protection->isAuthorized()) return nullptr;
     auto* engine = new TriangulationEngine();
     return engine;
 }
@@ -453,16 +454,22 @@ void deleteTriangulationEngine(TriangulationEngine *engine) {
     delete engine;
 }
 
-void TE_initUndistortMaps(TriangulationEngine *engine, double *cameraMatrix, double *distCoeffs, int width, int height) {
+int TE_initUndistortMaps(TriangulationEngine *engine, Protection *protection, double *cameraMatrix, double *distCoeffs, int width, int height) {
+    if (!protection->isAuthorized()) return -1;
     engine->initUndistortMaps(cameraMatrix, distCoeffs, width, height);
+    return 0;
 }
 
-void TE_setExtractionParameters(TriangulationEngine *engine, int threshold, bool firstSignal, int minLineWidth, int orientation) {
+int TE_setExtractionParameters(TriangulationEngine *engine, Protection *protection, int threshold, bool firstSignal, int minLineWidth, int orientation) {
+    if (!protection->isAuthorized()) return -1;
     engine->setExtractionParameters(threshold, firstSignal, minLineWidth, orientation);
+    return 0;
 }
 
-void TE_setImage(TriangulationEngine *engine, unsigned char *imagePtr, int width, int height, int lineWidth) {
+int TE_setImage(TriangulationEngine *engine, Protection *protection, unsigned char *imagePtr, int width, int height, int lineWidth) {
+    if (!protection->isAuthorized()) return -1;
     engine->setImage(imagePtr, width, height, lineWidth);
+    return 0;
 }
 
 int TE_extractLaserLine(TriangulationEngine *engine, Protection *protection) {
@@ -485,6 +492,8 @@ int TE_remapImage(TriangulationEngine *engine, Protection *protection) {
 //    engine->remapLine();
 //}
 
-void TE_getLine(TriangulationEngine *engine, double *line, int *lineWidths, int *size) {
+int TE_getLine(TriangulationEngine *engine, Protection *protection, double *line, int *lineWidths, int *size) {
+    if (!protection->isAuthorized()) return -1;
     engine->getLine(line, lineWidths, size);
+    return 0;
 }
