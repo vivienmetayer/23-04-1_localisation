@@ -51,5 +51,6 @@ DLL_EXPORT int TE_calibrateByCalculus(TriangulationEngine *engine, Protection *p
                                       double *distCoeffs, int boardWidth, int boardHeight, double squareLength,
                                       double markerLength, const char *calib_filename);
 DLL_EXPORT int TE_readCalibrationImage(TriangulationEngine *engine, Protection *protection, const char *fileName);
+DLL_EXPORT int TE_getPosition(TriangulationEngine *engine, Protection *protection, double x, double y, double *outX, double *outY, double *outZ);
 
 #endif //INC_23_04_1_LOCALISATION_TRIANGULATION_H

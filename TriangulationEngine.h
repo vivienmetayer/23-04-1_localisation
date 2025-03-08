@@ -27,6 +27,7 @@ public:
                              int boardWidth, int boardHeight, double squareLength, double markerLength,
                              const char *calib_filename);
     void readCalibrationImage(const char *calib_image_path);
+    cv::Vec3f getPosition(double x, double y);
 private:
     cv::Mat _image;
     cv::Mat _mapX;

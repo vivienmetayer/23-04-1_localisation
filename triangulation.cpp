@@ -515,3 +515,12 @@ int TE_readCalibrationImage(TriangulationEngine *engine, Protection *protection,
     engine->readCalibrationImage(fileName);
     return 0;
 }
+
+int TE_getPosition(TriangulationEngine *engine, Protection *protection, double x, double y, double *outX, double *outY, double *outZ) {
+    if (!protection->isAuthorized()) return -1;
+    cv::Vec3f point = engine->getPosition(x, y);
+    *outX = point[0];
+    *outY = point[1];
+    *outZ = point[2];
+    return 0;
+}

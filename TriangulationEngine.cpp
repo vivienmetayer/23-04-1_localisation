@@ -182,3 +182,38 @@ void TriangulationEngine::calibrateByCalculus(const double *corners, const doubl
 void TriangulationEngine::readCalibrationImage(const char *calib_image_path) {
     _calibImage = cv::imread(calib_image_path, cv::IMREAD_UNCHANGED);
 }
+
+cv::Vec3f TriangulationEngine::getPosition(double x, double y) {
+    if (_calibImage.empty()) return {0, 0, 0};
+
+    // neighbor pixels
+    int x1 = static_cast<int>(std::floor(x));
+    int y1 = static_cast<int>(std::floor(y));
+    int x2 = x1 + 1;
+    int y2 = y1 + 1;
+
+    // check image borders
+    if (x1 < 0 || x2 >= _calibImage.cols || y1 < 0 || y2 >= _calibImage.rows) {
+        return {0, 0, 0};
+    }
+
+    // get neighbor pixels values
+    cv::Vec3f Q11 = _calibImage.at<cv::Vec3f>(y1, x1);
+    cv::Vec3f Q21 = _calibImage.at<cv::Vec3f>(y1, x2);
+    cv::Vec3f Q12 = _calibImage.at<cv::Vec3f>(y2, x1);
+    cv::Vec3f Q22 = _calibImage.at<cv::Vec3f>(y2, x2);
+
+    // compute interpolation weights
+    double x2_x = x2 - x;
+    double x_x1 = x - x1;
+    double y2_y = y2 - y;
+    double y_y1 = y - y1;
+
+    // Interpolation
+    cv::Vec3f interpolatedValue = Q11 * x2_x * y2_y +
+                                  Q21 * x_x1 * y2_y +
+                                  Q12 * x2_x * y_y1 +
+                                  Q22 * x_x1 * y_y1;
+
+    return interpolatedValue;
+}
