@@ -29,8 +29,10 @@ target_include_directories(triangulationLib PUBLIC ${protection_include_dir})
 target_link_directories(triangulationLib PUBLIC ${protection_lib_dir})
 target_link_libraries(triangulationLib triangulationProtectionLib.lib)
 
-add_executable(TriangulationTest main.cpp)
-target_link_libraries(TriangulationTest triangulationLib ${OpenCV_LIBS})
+add_executable(TriangulationTest main.cpp TriangulationEngine.cpp TriangulationEngine.h)
+target_include_directories(TriangulationTest PUBLIC ${protection_include_dir})
+target_link_directories(TriangulationTest PUBLIC ${protection_lib_dir})
+target_link_libraries(TriangulationTest triangulationLib ${OpenCV_LIBS} triangulationProtectionLib.lib)
 
 # Cam 3D
 add_library(Cam3dLib SHARED Cam3d.cpp Cam3d.h Cam3d_functions.cpp Cam3d_functions.h ArenaCam.cpp ArenaCam.h Cam2d.cpp Cam2d.h)

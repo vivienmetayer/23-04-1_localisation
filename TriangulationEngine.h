@@ -23,16 +23,17 @@ public:
 //    void remapLine();
     void getLine(double *line, int *lineWidths, int *size) const;
     void calibrateByCalculus(const double *corners, const double *corners3D, int *ids, int numCorners, int width,
-                             int height, int dict, double *cameraMatrixValues, double *distCoeffs,
-                             int boardWidth, int boardHeight, double squareLength, double markerLength,
-                             const char *calib_filename);
-    void readCalibrationImage(const char *calib_image_path);
+                             int height, int dict, int boardWidth, int boardHeight,
+                             double squareLength, double markerLength, const char *calib_filename);
+    void readCalibrationImage(const char *calib_image_path, float *map2D);
     cv::Vec3f getPosition(double x, double y);
 private:
     cv::Mat _image;
     cv::Mat _mapX;
     cv::Mat _mapY;
     cv::Mat _calibImage;
+    cv::Mat _cameraMatrix;
+    cv::Mat _distCoeffs;
     std::vector<cv::Point2f> _line;
     std::vector<int> _lineWidths;
     int _threshold {25};

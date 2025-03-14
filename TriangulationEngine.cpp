@@ -10,6 +10,8 @@ void TriangulationEngine::initUndistortMaps(double *cameraMatrix, double *distCo
     cv::Mat R = cv::Mat::eye(3, 3, CV_64F);
     cv::initUndistortRectifyMap(cameraMatrixMat, distCoeffsMat, R, cameraMatrixMat,
                                 cv::Size(width, height), CV_32FC1, _mapX, _mapY);
+    _cameraMatrix = cameraMatrixMat.clone();
+    _distCoeffs = distCoeffsMat.clone();
 }
 
 void TriangulationEngine::setExtractionParameters(const int threshold, const bool firstSignal, const int minLineWidth, int scanOrientation) {
@@ -33,7 +35,7 @@ void TriangulationEngine::extractLaserLine() {
     for (int i = 0; i < numLines; ++i) {
         cv::Mat column = _orientation == VERTICAL ? _image.col(i) : _image.row(i);
         cv::Point2f laserPoint;
-        int lineWidth;
+        int lineWidth = 0;
         // read pixels from column, threshold and find line
         for (int j = 0; j < lineLength; ++j) {
             if (column.at<uchar>(j) > _threshold) {
@@ -65,6 +67,9 @@ void TriangulationEngine::extractLaserLine() {
         if (lineWidth >= _minLineWidth) {
             _line.push_back(laserPoint);
             _lineWidths.push_back(lineWidth);
+        } else {
+            _line.emplace_back(-1, -1);
+            _lineWidths.push_back(-1);
         }
     }
 }
@@ -115,12 +120,8 @@ void TriangulationEngine::getLine(double *line, int *lineWidths, int *size) cons
 }
 
 void TriangulationEngine::calibrateByCalculus(const double *corners, const double *corners3D, int *ids, int numCorners,
-                                              int width, int height, int dict, double *cameraMatrixValues,
-                                              double *distCoeffs, int boardWidth, int boardHeight, double squareLength,
+                                              int width, int height, int dict, int boardWidth, int boardHeight, double squareLength,
                                               double markerLength, const char *calib_filename) {
-    cv::Mat cameraMatrix(3, 3, CV_64F, cameraMatrixValues);
-    cv::Mat distCoeffsMat(1, 5, CV_64F, distCoeffs);
-
     // create board
     cv::aruco::Dictionary dictionary = cv::aruco::getPredefinedDictionary(dict);
     cv::Size boardSize(boardWidth, boardHeight);
@@ -141,7 +142,7 @@ void TriangulationEngine::calibrateByCalculus(const double *corners, const doubl
 
     // compute board position
     cv::Mat rvec, tvec;
-    cv::aruco::estimatePoseCharucoBoard(allCorners, allIds, board, cameraMatrix, distCoeffsMat, rvec, tvec);
+    cv::aruco::estimatePoseCharucoBoard(allCorners, allIds, board, _cameraMatrix, _distCoeffs, rvec, tvec);
 
     // for each pixel in the image, compute the 3D position by casting a ray from the camera to the board plane
     cv::Mat calib_image(height, width, CV_32FC3);
@@ -151,8 +152,8 @@ void TriangulationEngine::calibrateByCalculus(const double *corners, const doubl
             cv::Mat ray(3, 1, CV_64F);
 
             // Compute ray in camera system
-            ray.at<double>(0) = (p.x - cameraMatrix.at<double>(0, 2)) / cameraMatrix.at<double>(0, 0);
-            ray.at<double>(1) = (p.y - cameraMatrix.at<double>(1, 2)) / cameraMatrix.at<double>(1, 1);
+            ray.at<double>(0) = (p.x - _cameraMatrix.at<double>(0, 2)) / _cameraMatrix.at<double>(0, 0);
+            ray.at<double>(1) = (p.y - _cameraMatrix.at<double>(1, 2)) / _cameraMatrix.at<double>(1, 1);
             ray.at<double>(2) = 1;
 
             // Apply inverse transform to get to world system
@@ -179,8 +180,16 @@ void TriangulationEngine::calibrateByCalculus(const double *corners, const doubl
 
 }
 
-void TriangulationEngine::readCalibrationImage(const char *calib_image_path) {
+void TriangulationEngine::readCalibrationImage(const char *calib_image_path, float *map2D) {
     _calibImage = cv::imread(calib_image_path, cv::IMREAD_UNCHANGED);
+
+    for (int i = 0; i < _calibImage.rows; ++i) {
+        for (int j = 0; j < _calibImage.cols; ++j) {
+            cv::Vec3f p3D = _calibImage.at<cv::Vec3f>(i, j);
+            map2D[(i * _calibImage.cols + j) * 2] = p3D[0];
+            map2D[(i * _calibImage.cols + j) * 2 + 1] = p3D[1];
+        }
+    }
 }
 
 cv::Vec3f TriangulationEngine::getPosition(double x, double y) {

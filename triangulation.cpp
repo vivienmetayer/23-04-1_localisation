@@ -500,27 +500,27 @@ int TE_getLine(TriangulationEngine *engine, Protection *protection, double *line
 
 int TE_calibrateByCalculus(TriangulationEngine *engine, Protection *protection,
                            const double *corners, const double *corners3D, int *ids, int numCorners,
-                           int width, int height, int dict, double *cameraMatrixValues,
-                           double *distCoeffs, int boardWidth, int boardHeight, double squareLength,
+                           int width, int height, int dict, int boardWidth, int boardHeight, double squareLength,
                            double markerLength, const char *calib_filename) {
     if (!protection->isAuthorized()) return -1;
-    engine->calibrateByCalculus(corners, corners3D, ids, numCorners,
-                                width, height, dict, cameraMatrixValues, distCoeffs,
+    engine->calibrateByCalculus(corners, corners3D, ids, numCorners, width, height, dict,
                                 boardWidth, boardHeight, squareLength, markerLength, calib_filename);
     return 0;
 }
 
-int TE_readCalibrationImage(TriangulationEngine *engine, Protection *protection, const char *fileName) {
+int TE_readCalibrationImage(TriangulationEngine *engine, Protection *protection, const char *fileName, float *map2D) {
     if (!protection->isAuthorized()) return -1;
-    engine->readCalibrationImage(fileName);
+    engine->readCalibrationImage(fileName, map2D);
     return 0;
 }
 
-int TE_getPosition(TriangulationEngine *engine, Protection *protection, double x, double y, double *outX, double *outY, double *outZ) {
+int TE_getPosition(TriangulationEngine *engine, Protection *protection, double *inXY, double *outXY, int size) {
     if (!protection->isAuthorized()) return -1;
-    cv::Vec3f point = engine->getPosition(x, y);
-    *outX = point[0];
-    *outY = point[1];
-    *outZ = point[2];
+
+    for (int i = 0; i < size; ++i) {
+        cv::Vec3f point = engine->getPosition(inXY[2 * i], inXY[2 * i + 1]);
+        outXY[2 * i] = point[0];
+        outXY[2 * i + 1] = point[1];
+    }
     return 0;
 }

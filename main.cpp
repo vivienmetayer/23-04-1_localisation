@@ -11,16 +11,17 @@ int testFindBoardCorners() {
     std::vector<double> cornersArray(2 * 11 * 11);
     std::vector<double> objectPointsArray(3 * 11 * 11);
     std::vector<int> ids(11 * 11);
-    int n = findBoardCorners(imageGray.data, imageGray.cols, imageGray.rows, (int) imageGray.step,
-                             6, 4, 40, 31, cv::aruco::DICT_4X4_250,
-                             cornersArray.data(), objectPointsArray.data(), ids.data(), true);
+//    int n = findBoardCorners(imageGray.data, imageGray.cols, imageGray.rows, (int) imageGray.step,
+//                             6, 4, 40, 31, cv::aruco::DICT_4X4_250,
+//                             cornersArray.data(), objectPointsArray.data(), ids.data(), true);
 
     // show image
     cv::namedWindow("corners", cv::WINDOW_NORMAL);
     cv::imshow("corners", imageGray);
     cv::waitKey(0);
 
-    return n;
+//    return n;
+    return 0;
 }
 
 void testCalibration() {
@@ -50,18 +51,18 @@ void testCalibration() {
     std::vector<double> cornersArray(2 * boardWidth * boardHeight);
     std::vector<double> objectPointsArray(3 * boardWidth * boardHeight);
     std::vector<int> ids(boardWidth * boardHeight);
-    int n = findBoardCorners(imageGray.data, imageGray.cols, imageGray.rows, (int) imageGray.step,
-                             boardWidth, boardHeight, squareLength, markerLength, cv::aruco::DICT_4X4_250,
-                             cornersArray.data(), objectPointsArray.data(), ids.data(), true);
-    std::cout << "Found " << n << " corners" << std::endl;
-    ids.resize(n);
-    cornersArray.resize(2 * n);
-    objectPointsArray.resize(3 * n);
+//    int n = findBoardCorners(imageGray.data, imageGray.cols, imageGray.rows, (int) imageGray.step,
+//                             boardWidth, boardHeight, squareLength, markerLength, cv::aruco::DICT_4X4_250,
+//                             cornersArray.data(), objectPointsArray.data(), ids.data(), true);
+//    std::cout << "Found " << n << " corners" << std::endl;
+//    ids.resize(n);
+//    cornersArray.resize(2 * n);
+//    objectPointsArray.resize(3 * n);
 
     // calibrate
-    calibrate(cornersArray.data(), objectPointsArray.data(),
-              n, imageGray.cols, imageGray.rows,
-              R"(D:\Travail\Affaires\ARDPI\23-04-1 Systeme de localisation\data\calib.exr)");
+//    calibrate(cornersArray.data(), objectPointsArray.data(),
+//              n, imageGray.cols, imageGray.rows,
+//              R"(D:\Travail\Affaires\ARDPI\23-04-1 Systeme de localisation\data\calib.exr)");
 
     // compare distance between observed and calculated points
     cv::Mat imageCalib = cv::imread(R"(D:\Travail\Affaires\ARDPI\23-04-1 Systeme de localisation\data\calib.exr)", cv::IMREAD_UNCHANGED);
@@ -77,12 +78,12 @@ void testCalibration() {
     std::cout << "last corner: " << lastCornerCalib << std::endl;
 
     // undistort image
-    undistort(imageGray.data, imageGray.cols, imageGray.rows, (int) imageGray.step, cameraMatrix, distCoeffs);
+//    undistort(imageGray.data, imageGray.cols, imageGray.rows, (int) imageGray.step, cameraMatrix, distCoeffs);
 
     // take first and last corner of undistorted image
-    n = findBoardCorners(imageGray.data, imageGray.cols, imageGray.rows, (int) imageGray.step,
-                         boardWidth, boardHeight, squareLength, markerLength, cv::aruco::DICT_4X4_250,
-                         cornersArray.data(), objectPointsArray.data(), ids.data(), true);
+//    n = findBoardCorners(imageGray.data, imageGray.cols, imageGray.rows, (int) imageGray.step,
+//                         boardWidth, boardHeight, squareLength, markerLength, cv::aruco::DICT_4X4_250,
+//                         cornersArray.data(), objectPointsArray.data(), ids.data(), true);
     firstCorner = cv::Point2f(cornersArray[0], cornersArray[1]);
     lastCorner = cv::Point2f(cornersArray[2 * 11], cornersArray[2 * 11 + 1]);
     firstCornerCalib = imageCalib.at<cv::Vec3f>(firstCorner.y, firstCorner.x);
@@ -124,17 +125,17 @@ void testCalibrationByCalculus() {
     std::vector<double> objectPointsArray(3 * boardWidth * boardHeight);
     std::vector<int> ids(boardWidth * boardHeight);
     // undistort(imageGray.data, imageGray.cols, imageGray.rows, (int) imageGray.step, cameraMatrix, distCoeffs);
-    int n = findBoardCorners(imageGray.data, imageGray.cols, imageGray.rows, (int) imageGray.step,
-                             boardWidth, boardHeight, squareLength, markerLength, cv::aruco::DICT_4X4_250,
-                             cornersArray.data(), objectPointsArray.data(), ids.data(), false);
-    ids.resize(n);
-    cornersArray.resize(2 * n);
-    objectPointsArray.resize(3 * n);
+//    int n = findBoardCorners(imageGray.data, imageGray.cols, imageGray.rows, (int) imageGray.step,
+//                             boardWidth, boardHeight, squareLength, markerLength, cv::aruco::DICT_4X4_250,
+//                             cornersArray.data(), objectPointsArray.data(), ids.data(), false);
+//    ids.resize(n);
+//    cornersArray.resize(2 * n);
+//    objectPointsArray.resize(3 * n);
 
     // calibrate
-    calibrateByCalculus(cornersArray.data(), objectPointsArray.data(), ids.data(), n, imageGray.cols, imageGray.rows,
-                        cv::aruco::DICT_4X4_250, cameraMatrix, distCoeffs, boardWidth, boardHeight, squareLength, markerLength,
-                        R"(D:\Travail\Affaires\ARDPI\23-04-1 Systeme de localisation\data\calib.exr)");
+//    calibrateByCalculus(cornersArray.data(), objectPointsArray.data(), ids.data(), n, imageGray.cols, imageGray.rows,
+//                        cv::aruco::DICT_4X4_250, cameraMatrix, distCoeffs, boardWidth, boardHeight, squareLength, markerLength,
+//                        R"(D:\Travail\Affaires\ARDPI\23-04-1 Systeme de localisation\data\calib.exr)");
 
     // compare distance between observed and calculated points
     cv::Mat imageCalib = cv::imread(R"(D:\Travail\Affaires\ARDPI\23-04-1 Systeme de localisation\data\calib.exr)", cv::IMREAD_UNCHANGED);
@@ -150,12 +151,12 @@ void testCalibrationByCalculus() {
     std::cout << "last corner: " << lastCornerCalib << std::endl;
 
     // undistort image
-    undistort(imageGray.data, imageGray.cols, imageGray.rows, (int) imageGray.step, cameraMatrix, distCoeffs);
+//    undistort(imageGray.data, imageGray.cols, imageGray.rows, (int) imageGray.step, cameraMatrix, distCoeffs);
 
     // take first and last corner of undistorted image
-    n = findBoardCorners(imageGray.data, imageGray.cols, imageGray.rows, (int) imageGray.step,
-                         boardWidth, boardHeight, squareLength, markerLength, cv::aruco::DICT_4X4_250,
-                         cornersArray.data(), objectPointsArray.data(), ids.data(), true);
+//    n = findBoardCorners(imageGray.data, imageGray.cols, imageGray.rows, (int) imageGray.step,
+//                         boardWidth, boardHeight, squareLength, markerLength, cv::aruco::DICT_4X4_250,
+//                         cornersArray.data(), objectPointsArray.data(), ids.data(), true);
     firstCorner = cv::Point2f(cornersArray[0], cornersArray[1]);
     lastCorner = cv::Point2f(cornersArray[2 * 11], cornersArray[2 * 11 + 1]);
     firstCornerCalib = imageCalib.at<cv::Vec3f>(firstCorner.y, firstCorner.x);
@@ -186,7 +187,7 @@ void testRemap() {
 
     std::vector<float> mapX(4512 * 4512, 0.0f);
     std::vector<float> mapY(4512 * 4512, 0.0f);
-    createUndistortMap(cameraMatrix, distCoeffs, 4512, 4512, mapX.data(), mapY.data());
+//    createUndistortMap(cameraMatrix, distCoeffs, 4512, 4512, mapX.data(), mapY.data());
 
     cv::Mat image = cv::imread(R"(D:\Travail\Affaires\ARDPI\23-04-1 Systeme de localisation\data\DataCalib\Lower\20241022151758.png)");
     cv::cvtColor(image, image, cv::COLOR_BGR2GRAY);
@@ -194,7 +195,7 @@ void testRemap() {
     cv::namedWindow("original", cv::WINDOW_NORMAL);
     cv::imshow("original", image);
 
-    remap(image.data, image.cols, image.rows, (int) image.step, mapX.data(), mapY.data());
+//    remap(image.data, image.cols, image.rows, (int) image.step, mapX.data(), mapY.data());
 
     cv::namedWindow("undistorted", cv::WINDOW_NORMAL);
     cv::imshow("undistorted", image);
@@ -214,8 +215,8 @@ void testFindMarkers() {
     int numMarkers;
     std::vector<double> cornersArray(2 * 4 * maxMarkers);
     std::vector<int> ids(maxMarkers);
-    detectMarkers(imageGray.data, imageGray.cols, imageGray.rows, (int) imageGray.step,  cv::aruco::DICT_4X4_250,
-                  cornersArray.data(), ids.data(), &numMarkers, maxMarkers, true);
+//    detectMarkers(imageGray.data, imageGray.cols, imageGray.rows, (int) imageGray.step,  cv::aruco::DICT_4X4_250,
+//                  cornersArray.data(), ids.data(), &numMarkers, maxMarkers, true);
     std::cout << "Found " << numMarkers << " markers" << std::endl;
     ids.resize(numMarkers);
     cornersArray.resize(2 * 4 * numMarkers);
@@ -331,11 +332,50 @@ void calibrateCamera() {
             << cameraMatrix[6] << " " << cameraMatrix[7] << " " << cameraMatrix[8] << std::endl;
 }
 
+int testTriangulationEngine() {
+    double cameraMatrix[9] = {0, 0, 0, 0, 0, 0, 0, 0, 0};
+    double distCoeffs[5];
+    cameraMatrix[0] = 4538.86;
+    cameraMatrix[4] = 4536.97;
+    cameraMatrix[2] = 2270.74;
+    cameraMatrix[5] = 2290.24;
+    cameraMatrix[8] = 1.0;
+    distCoeffs[0] = -0.168353;
+    distCoeffs[1] = 0.154076;
+    distCoeffs[2] = -0.000354333;
+    distCoeffs[3] = -6.917872926871078e-05;
+    distCoeffs[4] = -0.02;
+
+    TriangulationEngine engine;
+    engine.initUndistortMaps(cameraMatrix, distCoeffs, 4512, 4512);
+    std::vector<float> map2D(4512*4512*2);
+    engine.readCalibrationImage(R"(D:\Work\Clients\ARDPI\23-04-1_localisation\images\calib.exr)", map2D.data());
+    cv::Mat image = cv::imread(R"(D:\Work\Clients\ARDPI\23-04-1_localisation\images\20250311105219cam9.bmp)");
+    cv::cvtColor(image, image, cv::COLOR_BGR2GRAY);
+    engine.setImage(image.data, image.cols, image.rows, image.step);
+    engine.setExtractionParameters(100, true, 5, orientation::VERTICAL);
+    engine.extractLaserLine();
+    std::vector<double> line(4512 * 2);
+    std::vector<int> lineWidths(4512);
+    int size;
+    engine.getLine(line.data(), lineWidths.data(), &size);
+
+    cv::Mat checkImage = cv::imread(R"(D:\Work\Clients\ARDPI\23-04-1_localisation\images\20250311105219cam9.bmp)");
+    if (checkImage.type() == CV_8UC3) {
+        for (int i = 0; i < 4512; ++i) {
+            if (lineWidths[i] != -1) {
+                cv::Point2i point(line[2*i], line[2*i+1]);
+                checkImage.at<cv::Vec3b>(point) = cv::Vec3b(0, 0, 255);
+            }
+        }
+    }
+    cv::namedWindow("image", cv::WINDOW_NORMAL);
+    cv::imshow("image", checkImage);
+    cv::waitKey(0);
+    return 0;
+}
+
 int main() {
-    // calibrateCamera();
-    // printBoard();
-    // testCalibration();
-    // testCalibrationByCalculus();
-    testRemap();
+    testTriangulationEngine();
     return 0;
 }

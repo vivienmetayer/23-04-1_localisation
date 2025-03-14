@@ -4,6 +4,7 @@
 #include <opencv2/opencv.hpp>
 #include <opencv2/aruco.hpp>
 #include "TriangulationEngine.h"
+#include "Protection.h"
 
 #define DLL_EXPORT extern "C" __declspec(dllexport)
 
@@ -47,10 +48,9 @@ DLL_EXPORT int TE_getLine(TriangulationEngine *engine, Protection *protection, d
 DLL_EXPORT void deleteTriangulationEngine(TriangulationEngine *engine);
 DLL_EXPORT int TE_calibrateByCalculus(TriangulationEngine *engine, Protection *protection,
                                       const double *corners, const double *corners3D, int *ids, int numCorners,
-                                      int width, int height, int dict, double *cameraMatrixValues,
-                                      double *distCoeffs, int boardWidth, int boardHeight, double squareLength,
+                                      int width, int height, int dict, int boardWidth, int boardHeight, double squareLength,
                                       double markerLength, const char *calib_filename);
-DLL_EXPORT int TE_readCalibrationImage(TriangulationEngine *engine, Protection *protection, const char *fileName);
-DLL_EXPORT int TE_getPosition(TriangulationEngine *engine, Protection *protection, double x, double y, double *outX, double *outY, double *outZ);
+DLL_EXPORT int TE_readCalibrationImage(TriangulationEngine *engine, Protection *protection, const char *fileName, float *map2D);
+DLL_EXPORT int TE_getPosition(TriangulationEngine *engine, Protection *protection, double *inXY, double *outXY, int size);
 
 #endif //INC_23_04_1_LOCALISATION_TRIANGULATION_H
