@@ -30,6 +30,8 @@ void TriangulationEngine::extractLaserLine() {
     int lineLength = _orientation == VERTICAL ? _image.cols : _image.rows;
     _line.clear();
     _line.reserve(numLines);
+    _lineWidths.clear();
+    _lineWidths.reserve(numLines);
 
     // for each line, find laser line
     for (int i = 0; i < numLines; ++i) {
@@ -45,11 +47,15 @@ void TriangulationEngine::extractLaserLine() {
 
                 // search for signal end
                 int k = j;
-                while (k < lineLength && column.at<uchar>(k) > _threshold) {
-                    k++;
-                    sum += column.at<uchar>(k);
-                    positionWeight += k * column.at<uchar>(k);
-                    lineWidth++;
+                while (k < lineLength) {
+                    if (column.at<uchar>(k) > _threshold) {
+                        sum += column.at<uchar>(k);
+                        positionWeight += k * column.at<uchar>(k);
+                        lineWidth++;
+                        k++;
+                    } else {
+                        break;
+                    }
                 }
 
                 // Check if the detected line width is greater than or equal to _minLineWidth

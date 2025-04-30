@@ -378,6 +378,6 @@ int testTriangulationEngine() {
 }
 
 int main() {
-    testFindBoardCorners();
+    testTriangulationEngine();
     return 0;
 }
