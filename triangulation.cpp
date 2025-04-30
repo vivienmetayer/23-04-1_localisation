@@ -74,7 +74,7 @@ int findBoardCorners(Protection *protection, unsigned char *imagePtr, int width,
     std::vector<cv::Point2f> charucoCorners;
     cv::aruco::CharucoDetector charucoDetector(board);
     cv::aruco::CharucoParameters charucoParams;
-    charucoParams.minMarkers = 1;
+    charucoParams.minMarkers = 2;
     charucoDetector.setCharucoParameters(charucoParams);
     charucoDetector.detectBoard(image, charucoCorners, charucoIds, markerCorners, markerIds);
 
@@ -97,8 +97,10 @@ int findBoardCorners(Protection *protection, unsigned char *imagePtr, int width,
     }
 
     // draw markers
-    if (drawMarkers)
+    if (drawMarkers) {
         cv::aruco::drawDetectedCornersCharuco(image, charucoCorners, charucoIds);
+        cv::aruco::drawDetectedMarkers(image, markerCorners, markerIds);
+    }
 
     return static_cast<int>(charucoCorners.size());
 }

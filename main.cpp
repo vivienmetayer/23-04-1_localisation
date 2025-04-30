@@ -1,19 +1,21 @@
 #include <filesystem>
 
 #include "triangulation.h"
+#include "TriangulationProtectionDebug.h"
 
 int testFindBoardCorners() {
-    cv::Mat image = cv::imread(R"(E:\images\stereo\cam3d.png)");
+    cv::Mat image = cv::imread(R"(D:\Work\Clients\ARDPI\23-04-1_localisation\images\img charuco\9.bmp)");
     cv::Mat imageGray;
     cv::cvtColor(image, imageGray, cv::COLOR_BGR2GRAY);
 
     // find corners
-    std::vector<double> cornersArray(2 * 11 * 11);
-    std::vector<double> objectPointsArray(3 * 11 * 11);
-    std::vector<int> ids(11 * 11);
-//    int n = findBoardCorners(imageGray.data, imageGray.cols, imageGray.rows, (int) imageGray.step,
-//                             6, 4, 40, 31, cv::aruco::DICT_4X4_250,
-//                             cornersArray.data(), objectPointsArray.data(), ids.data(), true);
+    std::vector<double> cornersArray(2 * 24 * 14);
+    std::vector<double> objectPointsArray(3 * 24 * 14);
+    std::vector<int> ids(24 * 14);
+    TriangulationProtectionDebug *protection = createTriangulationProtection(0);
+    int n = findBoardCorners(protection, imageGray.data, imageGray.cols, imageGray.rows, (int) imageGray.step,
+                             24, 14, 8, 6, cv::aruco::DICT_5X5_250,
+                             cornersArray.data(), objectPointsArray.data(), ids.data(), true);
 
     // show image
     cv::namedWindow("corners", cv::WINDOW_NORMAL);
@@ -376,6 +378,6 @@ int testTriangulationEngine() {
 }
 
 int main() {
-    testTriangulationEngine();
+    testFindBoardCorners();
     return 0;
 }
