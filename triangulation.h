@@ -26,7 +26,9 @@ DLL_EXPORT double calibrateCamera(Protection *protection, double *corners, int *
                        int boardWidth, int boardHeight, float squareLength, float markerLength, int dict, double *cameraMatrix, double *distCoeffs);
 
 DLL_EXPORT int detectMarkers(Protection *protection, unsigned char *imagePtr, int width, int height, int lineWidth, int dict,
-                             double *corners, int *ids, int *numMarkers, int maxMarkers, bool drawMarkers);
+                             double *corners, int *ids, int *numMarkers, int maxMarkers, bool drawMarkers,
+                             double markerLength, double *cameraMatrix, double *distCoeffs,
+                             double *R, double *T);
 
 //DLL_EXPORT void undistort(unsigned char *imagePtr, int width, int height, int lineWidth, double *cameraMatrix,
 //               double *distCoeffs);
