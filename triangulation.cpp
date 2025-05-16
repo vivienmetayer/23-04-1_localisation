@@ -57,7 +57,8 @@ cv::Point3f applyBarycentricCoords(const std::vector<double> &coords, const std:
 
 int findBoardCorners(Protection *protection, unsigned char *imagePtr, int width, int height, int lineWidth,
                      int boardWidth, int boardHeight, float squareLength, float markerLength, int dictionaryId,
-                     double *corners, double *objectPoints, int *ids, bool drawMarkers) {
+                     double *corners, double *objectPoints, int *ids, bool drawMarkers,
+                     int adaptiveThreshConstant, int adaptiveThreshWinSizeMin, int adaptiveThreshWinSizeMax) {
     if (!protection->isAuthorized()) return -1;
     // get image from LabVIEW pointer
     cv::Mat image(cv::Size(width, height), CV_8UC1, imagePtr, lineWidth);
@@ -75,7 +76,18 @@ int findBoardCorners(Protection *protection, unsigned char *imagePtr, int width,
     cv::aruco::CharucoDetector charucoDetector(board);
     cv::aruco::CharucoParameters charucoParams;
     charucoParams.minMarkers = 2;
+    charucoParams.cameraMatrix = cv::Mat();
+    charucoParams.distCoeffs = cv::Mat();
     charucoDetector.setCharucoParameters(charucoParams);
+    cv::aruco::DetectorParameters detectorParams;
+    detectorParams.adaptiveThreshConstant = adaptiveThreshConstant;
+    detectorParams.adaptiveThreshWinSizeMin = adaptiveThreshWinSizeMin;
+    detectorParams.adaptiveThreshWinSizeMax = adaptiveThreshWinSizeMax;
+    detectorParams.cornerRefinementMethod = cv::aruco::CORNER_REFINE_SUBPIX;
+    detectorParams.cornerRefinementWinSize = 5;
+    detectorParams.cornerRefinementMaxIterations = 30;
+    detectorParams.cornerRefinementMinAccuracy = 1.0;
+    charucoDetector.setDetectorParameters(detectorParams);
     charucoDetector.detectBoard(image, charucoCorners, charucoIds, markerCorners, markerIds);
 
     // export corners

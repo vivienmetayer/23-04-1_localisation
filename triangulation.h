@@ -10,7 +10,8 @@
 
 DLL_EXPORT int findBoardCorners(Protection *protection, unsigned char *imagePtr, int width, int height, int lineWidth,
                                 int boardWidth, int boardHeight, float squareLength, float markerLength, int dictionaryId,
-                                double *corners, double *objectPoints, int *ids, bool drawMarkers);
+                                double *corners, double *objectPoints, int *ids, bool drawMarkers,
+                                int adaptiveThreshConstant, int adaptiveThreshWinSizeMin, int adaptiveThreshWinSizeMax);
 
 //DLL_EXPORT void calibrate(const double* corners, const double* corners3D, int numCorners,
 //                          int width, int height, const char* calib_filename);
