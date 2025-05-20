@@ -60,7 +60,7 @@ int findBoardCorners(Protection *protection, unsigned char *imagePtr, int width,
                      double *corners, double *objectPoints, int *ids, bool drawMarkers,
                      int adaptiveThreshConstant, int adaptiveThreshWinSizeMin, int adaptiveThreshWinSizeMax) {
     if (!protection->isAuthorized()) return -1;
-    // get image from LabVIEW pointer
+    // get image from pointer
     cv::Mat image(cv::Size(width, height), CV_8UC1, imagePtr, lineWidth);
 
     // create board

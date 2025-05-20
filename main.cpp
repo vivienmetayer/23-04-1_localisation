@@ -3,11 +3,31 @@
 #include "triangulation.h"
 #include "TriangulationProtectionDebug.h"
 
+void generateImage() {
+    int squaresX = 24;
+    int squaresY = 14;
+    float squareLength = 8;
+    float markerLength = 6;
+
+    cv::aruco::Dictionary dictionary = cv::aruco::getPredefinedDictionary(cv::aruco::DICT_5X5_250);
+
+    cv::Size boardSize(squaresX, squaresY);
+    cv::aruco::CharucoBoard board(boardSize, squareLength, markerLength, dictionary);
+
+    cv::Mat boardImage;
+    board.generateImage(cv::Size(2400, 1400), boardImage, 10, 1);
+
+    cv::imshow("ChArUco Board", boardImage);
+    cv::imwrite("D:\\Work\\Clients\\ARDPI\\23-04-1_localisation\\images\\20250505161709cam12\\charuco_board.png", boardImage);
+    cv::waitKey(0);
+}
+
 int testFindBoardCorners() {
-    cv::Mat image = cv::imread(R"(D:\Work\Clients\ARDPI\23-04-1_localisation\images\20250505161709cam12\20250505160801cam12.bmp)");
+    cv::Mat image = cv::imread(R"(C:\Users\Vivien\Documents\ShareX\Screenshots\2025-05\2025_05_20_chrome_JF.png)");
+//    cv::Mat image = cv::imread(R"(D:\Work\Clients\ARDPI\23-04-1_localisation\images\20250505161709cam12\untitled.png)");
     cv::Mat imageGray;
     cv::cvtColor(image, imageGray, cv::COLOR_BGR2GRAY);
-    cv::GaussianBlur(imageGray, imageGray, cv::Size(5, 5), 0);
+    //cv::GaussianBlur(imageGray, imageGray, cv::Size(5, 5), 0);
 
     // find corners
     std::vector<double> cornersArray(2 * 24 * 14);
@@ -380,6 +400,7 @@ int testTriangulationEngine() {
 }
 
 int main() {
-    int n = testFindBoardCorners();
-    return n;
+//    int n = testFindBoardCorners();
+    generateImage();
+    return 0;
 }
