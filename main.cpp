@@ -13,6 +13,7 @@ void generateImage() {
 
     cv::Size boardSize(squaresX, squaresY);
     cv::aruco::CharucoBoard board(boardSize, squareLength, markerLength, dictionary);
+    board.setLegacyPattern(true);
 
     cv::Mat boardImage;
     board.generateImage(cv::Size(2400, 1400), boardImage, 10, 1);
@@ -23,8 +24,8 @@ void generateImage() {
 }
 
 int testFindBoardCorners() {
-    cv::Mat image = cv::imread(R"(C:\Users\Vivien\Documents\ShareX\Screenshots\2025-05\2025_05_20_chrome_JF.png)");
-//    cv::Mat image = cv::imread(R"(D:\Work\Clients\ARDPI\23-04-1_localisation\images\20250505161709cam12\untitled.png)");
+//    cv::Mat image = cv::imread(R"(C:\Users\Vivien\Documents\ShareX\Screenshots\2025-05\2025_05_20_chrome_JF.png)");
+    cv::Mat image = cv::imread(R"(D:\Work\Clients\ARDPI\23-04-1_localisation\images\20250505161709cam12\20250505160801cam12.bmp)");
     cv::Mat imageGray;
     cv::cvtColor(image, imageGray, cv::COLOR_BGR2GRAY);
     //cv::GaussianBlur(imageGray, imageGray, cv::Size(5, 5), 0);
@@ -400,7 +401,7 @@ int testTriangulationEngine() {
 }
 
 int main() {
-//    int n = testFindBoardCorners();
-    generateImage();
-    return 0;
+    int n = testFindBoardCorners();
+//    generateImage();
+    return n;
 }

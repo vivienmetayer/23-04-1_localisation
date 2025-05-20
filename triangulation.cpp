@@ -67,6 +67,7 @@ int findBoardCorners(Protection *protection, unsigned char *imagePtr, int width,
     cv::aruco::Dictionary dictionary = cv::aruco::getPredefinedDictionary(dictionaryId);
     cv::Size boardSize(boardWidth, boardHeight);
     cv::aruco::CharucoBoard board(boardSize, squareLength, markerLength, dictionary);
+    board.setLegacyPattern(true);
 
     // find corners
     std::vector<int> markerIds;
@@ -220,6 +221,7 @@ int calibrateByCalculus(Protection *protection, const double *corners, const dou
     cv::aruco::Dictionary dictionary = cv::aruco::getPredefinedDictionary(dict);
     cv::Size boardSize(boardWidth, boardHeight);
     cv::Ptr<cv::aruco::CharucoBoard> board = cv::makePtr<cv::aruco::CharucoBoard>(boardSize, squareLength, markerLength, dictionary);
+    board->setLegacyPattern(true);
 
     // create vectors
     std::vector<cv::Point2f> allCorners;
@@ -298,6 +300,7 @@ double calibrateCamera(Protection *protection, double *corners, int *ids, const 
     cv::aruco::Dictionary dictionary = cv::aruco::getPredefinedDictionary(dict);
     cv::Size boardSize(boardWidth, boardHeight);
     cv::Ptr<cv::aruco::CharucoBoard> board = cv::makePtr<cv::aruco::CharucoBoard>(boardSize, squareLength, markerLength, dictionary);
+    board->setLegacyPattern(true);
 
     // create vectors
     std::vector<std::vector<cv::Point2f> > allCorners;
